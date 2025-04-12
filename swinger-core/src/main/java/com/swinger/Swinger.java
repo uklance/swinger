@@ -11,20 +11,17 @@ import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
 @AllArgsConstructor
 public class Swinger {
     private final DocumentBuilder documentBuilder;
     private final ClassLoader classLoader;
-    private final Converter converter;
-    private final BindingSource bindingSource;
-    private final Map<String, TagHandler> tagHandlers;
+    private final ServiceRegistry serviceRegistry;
     private final List<FieldResolver> fieldResolvers;
-
-    public static SwingerBuilder builder() {
-        return new SwingerBuilder();
-    }
+    private final List<MethodHandler> methodHandlers;
+    private final Map<String, TagHandler> tagHandlers;
 
     public <T> ComponentSource build(Class<T> type) throws Exception {
         String xmlPath = String.format("%s.xml", type.getName().replace('.', '/'));
@@ -44,13 +41,8 @@ public class Swinger {
                 }
 
                 @Override
-                public Converter getConverter() {
-                    return converter;
-                }
-
-                @Override
-                public BindingSource getBindingSource() {
-                    return bindingSource;
+                public ServiceRegistry getRegistry() {
+                    return serviceRegistry;
                 }
             };
             init(controller, context);
@@ -70,6 +62,12 @@ public class Swinger {
                     field.set(controller, value);
                 }
             }
+        }
+        for (Method method : controller.getClass().getMethods()) {
+            methodHandlers.stream()
+                    .filter(h -> h.supportsMethod(method, context))
+                    .findFirst()
+                    .ifPresent(h -> h.handleMethod(method, context));
         }
     }
 

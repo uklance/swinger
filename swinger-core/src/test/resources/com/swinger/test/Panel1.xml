@@ -4,6 +4,6 @@
     <button text="button1" actionListener="prop:button1Listener" />
     <panel>
         <label text="label2" />
-        <button text="button2" />
+        <button text="button2" actionListener="event:button2" />
     </panel>
 </panel>

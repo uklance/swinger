@@ -12,10 +12,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefaultTagHandler implements TagHandler {
+    private final BindingSource bindingSource;
+    private final Converter converter;
     private final Class<? extends JComponent> type;
     private final Map<String, Method> setters;
 
-    public DefaultTagHandler(Class<? extends JComponent> type) {
+    public DefaultTagHandler(BindingSource bindingSource, Converter converter, Class<? extends JComponent> type) {
         Map<String, Method> setters = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (Method method : type.getMethods()) {
             String name = method.getName();
@@ -24,6 +26,8 @@ public class DefaultTagHandler implements TagHandler {
                 setters.put(propName, method);
             }
         }
+        this.bindingSource = bindingSource;
+        this.converter = converter;
         this.type = type;
         this.setters = setters;
     }
@@ -49,13 +53,13 @@ public class DefaultTagHandler implements TagHandler {
             Matcher matcher = BINDING_PATTERN.matcher(attrValue);
             Object bindingValue;
             if (matcher.matches()) {
-                Binding binding = context.getBindingSource().getBinding(matcher.group(1));
+                Binding binding = bindingSource.getBinding(matcher.group(1));
                 bindingValue = binding.resolve(matcher.group(2), context);
             } else {
-                Binding binding = context.getBindingSource().getDefaultBinding();
+                Binding binding = bindingSource.getDefaultBinding();
                 bindingValue = binding.resolve(attrValue, context);
             }
-            Object convertedValue = context.getConverter().convert(bindingValue, setter.getParameterTypes()[0]);
+            Object convertedValue = converter.convert(bindingValue, setter.getParameterTypes()[0]);
             setter.invoke(component, convertedValue);
         }
 

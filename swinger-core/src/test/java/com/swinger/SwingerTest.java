@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SwingerTest {
@@ -16,18 +19,25 @@ public class SwingerTest {
     public void beforeEach() throws Exception {
         DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Binding literalBinding = new LiteralBinding();
-        Map<String, Binding> bindingMap = Map.of("literal", literalBinding, "prop", new PropBinding());
+        EventManager eventManager = new DefaultEventManager();
+        Map<String, Binding> bindingMap = Map.of(
+                "literal", literalBinding,
+                "prop", new PropBinding(),
+                "event", new EventBinding(eventManager)
+        );
         BindingSource bindingSource = new DefaultBindingSource(bindingMap, literalBinding);
-        swinger = Swinger.builder()
-                .classLoader(SwingerTest.class.getClassLoader())
-                .documentBuilder(documentBuilder)
-                .attributeConverter(new DefaultConverter())
-                .bindingSource(bindingSource)
-                .tagHandler("label", new DefaultTagHandler(JLabel.class))
-                .tagHandler("panel", new DefaultTagHandler(JPanel.class))
-                .tagHandler("button", new DefaultTagHandler(JButton.class))
-                .tagHandler("textField", new DefaultTagHandler(JTextField.class))
-                .build();
+        Converter converter = new DefaultConverter();
+        ServiceRegistry registry = new DefaultServiceRegistry(Collections.emptyMap());
+        List<FieldResolver> fieldResolvers = Collections.emptyList();
+        List<MethodHandler> methodHandlers = List.of(
+                new OnEventMethodHandler(eventManager)
+        );
+        Map<String, TagHandler> tagHandlers = new HashMap<>();
+        tagHandlers.put("label", new DefaultTagHandler(bindingSource, converter, JLabel.class));
+        tagHandlers.put("panel", new DefaultTagHandler(bindingSource, converter, JPanel.class));
+        tagHandlers.put("button", new DefaultTagHandler(bindingSource, converter, JButton.class));
+        tagHandlers.put("textField", new DefaultTagHandler(bindingSource, converter, JTextField.class));
+        swinger = new Swinger(documentBuilder, SwingerTest.class.getClassLoader(), registry, fieldResolvers, methodHandlers, tagHandlers);
     }
 
     @Test
