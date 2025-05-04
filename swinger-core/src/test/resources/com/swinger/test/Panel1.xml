@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<panel>
+<panel xmlns:p="swinger:parameter">
     <label text="label1" />
     <button text="button1" actionListener="prop:button1Listener" />
-    <panel>
-        <label text="label2" />
-        <button text="button2" actionListener="event:button2" />
-    </panel>
+    <split-pane>
+        <p:leftComponent>
+            <label text="left component" />
+        </p:leftComponent>
+        <p:rightComponent>
+            <label text="right component" />
+        </p:rightComponent>
+    </split-pane>
+    <button text="button2" actionListener="event:button2" />
 </panel>

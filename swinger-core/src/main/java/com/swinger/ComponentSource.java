@@ -1,9 +1,7 @@
 package com.swinger;
 
-import javax.swing.*;
+import org.xml.sax.Locator;
 
 public interface ComponentSource {
-    String getId();
-    JComponent getComponent();
-    String getConstraints();
+    ComponentResources create(String id, Object constraints, Locator locator);
 }

@@ -1,5 +1,5 @@
 package com.swinger;
 
 public interface Binding {
-    Object resolve(String value, SwingerContext context) throws Exception;
+    Object resolve(Object controller, String value) throws Exception;
 }
