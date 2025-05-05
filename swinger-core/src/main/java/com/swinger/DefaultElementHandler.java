@@ -11,13 +11,13 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DefaultTagHandler implements TagHandler {
+public class DefaultElementHandler implements ElementHandler {
     private final BindingSource bindingSource;
     private final Converter converter;
     private final Class<? extends JComponent> type;
     private final Map<String, Method> setters;
 
-    public DefaultTagHandler(BindingSource bindingSource, Converter converter, Class<? extends JComponent> type) {
+    public DefaultElementHandler(BindingSource bindingSource, Converter converter, Class<? extends JComponent> type) {
         Map<String, Method> setters = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (Method method : type.getMethods()) {
             String name = method.getName();
@@ -43,6 +43,9 @@ public class DefaultTagHandler implements TagHandler {
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0; i < attributes.getLength(); ++i) {
             Attr attr = (Attr) attributes.item(i);
+            if (attr.getName().startsWith("xmlns:")) {
+                continue;
+            }
             String propName = attr.getName();
             Method setter = setters.get(propName);
             if (setter == null) {

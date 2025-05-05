@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +16,9 @@ public class SwingerTest {
 
     @BeforeEach
     public void beforeEach() throws Exception {
-        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        docBuilderFactory.setNamespaceAware(true);
+        DocumentBuilder documentBuilder = docBuilderFactory.newDocumentBuilder();
         Binding literalBinding = new LiteralBinding();
         EventManager eventManager = new DefaultEventManager();
         Map<String, Binding> bindingMap = Map.of(
@@ -32,12 +33,16 @@ public class SwingerTest {
         List<MethodHandler> methodHandlers = List.of(
                 new OnEventMethodHandler(eventManager)
         );
-        Map<String, TagHandler> tagHandlers = new HashMap<>();
-        tagHandlers.put("label", new DefaultTagHandler(bindingSource, converter, JLabel.class));
-        tagHandlers.put("panel", new DefaultTagHandler(bindingSource, converter, JPanel.class));
-        tagHandlers.put("button", new DefaultTagHandler(bindingSource, converter, JButton.class));
-        tagHandlers.put("textField", new DefaultTagHandler(bindingSource, converter, JTextField.class));
-        swinger = new Swinger(documentBuilder, SwingerTest.class.getClassLoader(), registry, fieldResolvers, methodHandlers, tagHandlers);
+        ElementHandlers defaultElementHandlers = new TagElementHandlers(Map.of(
+                "label", new DefaultElementHandler(bindingSource, converter, JLabel.class),
+                "panel", new DefaultElementHandler(bindingSource, converter, JPanel.class),
+                "button", new DefaultElementHandler(bindingSource, converter, JButton.class),
+                "textField", new DefaultElementHandler(bindingSource, converter, JTextField.class)
+        ));
+        ElementHandlers elementHandlers = new NamespaceElementHandlers(defaultElementHandlers, Map.of(
+                "swinger:parameter", new PropertyElementHandlers()
+        ));
+        swinger = new Swinger(documentBuilder, SwingerTest.class.getClassLoader(), registry, fieldResolvers, methodHandlers, elementHandlers);
     }
 
     @Test

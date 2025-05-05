@@ -12,7 +12,9 @@ import javax.xml.parsers.DocumentBuilder;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @AllArgsConstructor
 public class Swinger {
@@ -21,7 +23,7 @@ public class Swinger {
     private final ServiceRegistry serviceRegistry;
     private final List<FieldResolver> fieldResolvers;
     private final List<MethodHandler> methodHandlers;
-    private final Map<String, TagHandler> tagHandlers;
+    private final ElementHandlers elementHandlers;
 
     public <T> ComponentSource build(Class<T> type) throws Exception {
         String xmlPath = String.format("%s.xml", type.getName().replace('.', '/'));
@@ -72,18 +74,14 @@ public class Swinger {
     }
 
     protected ComponentSource build(Element element, SwingerContext context) throws Exception {
-        String tag = element.getTagName();
         NodeList children = element.getChildNodes();
-        TagHandler tagHandler = tagHandlers.get(tag);
-        Objects.requireNonNull(tagHandler, "Tag handler for " + tag);
-        ComponentSource rootSource = tagHandler.handle(element, context);
+        ElementHandler elementHandler = elementHandlers.getElementHandler(element);
+        ComponentSource rootSource = elementHandler.handle(element, context);
         JComponent component = rootSource.getComponent();
-        List<ComponentSource> childSources = children.getLength() == 0 ? Collections.emptyList() : new ArrayList<>();
         for (int i = 0; i < children.getLength(); ++i) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 ComponentSource childSource = build((Element) child, context);
-                childSources.add(childSource);
                 component.add(childSource.getComponent(), childSource.getConstraints());
             }
         }
