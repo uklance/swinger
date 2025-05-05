@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<panel xmlns:p="swinger:parameter">
+<panel xmlns:p="swinger:parameter" layout="new:net.miginfocom.swing.MigLayout">
     <label text="label1" />
-    <button text="button1" actionListener="prop:button1Listener" />
-    <split-pane>
+    <button text="button1" actionListener="prop:button1Listener" constraints="wrap"/>
+    <split-pane constraints="wrap, span, push, grow">
         <p:leftComponent>
             <label text="left component" />
         </p:leftComponent>

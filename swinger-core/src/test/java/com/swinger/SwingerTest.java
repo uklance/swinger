@@ -26,7 +26,9 @@ public class SwingerTest {
         ));
         BindingRegistry bindingRegistry = new DefaultBindingRegistry(Map.of(
                 "prop", new PropertyBinding(memberAccessor),
-                "event", new EventBinding(eventManager)
+                "event", new EventBinding(eventManager),
+                "new", new NewBinding(),
+                "literal", new LiteralBinding()
         ));
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
