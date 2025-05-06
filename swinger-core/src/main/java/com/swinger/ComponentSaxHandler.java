@@ -1,6 +1,5 @@
 package com.swinger;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.xml.sax.Attributes;
@@ -9,17 +8,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class ComponentSaxHandler extends DefaultHandler {
-    private static final short NODE_TYPE_COMPONENT = 1;
-    private static final short NODE_TYPE_PARAMETER = 2;
     private static final String PARAMETER_NAMESPACE = "swinger:parameter";
     private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("([^:]*):(.*)");
     private static final Set<String> RESERVED_ATTRIBUTES = Set.of("id", "constraints");
@@ -41,28 +36,49 @@ public class ComponentSaxHandler extends DefaultHandler {
         this.locator = locator;
     }
 
-    @AllArgsConstructor
-    static abstract class StackNode {
-        private final short nodeType;
+    interface StackNode {
+        void onChild(StackNode child) throws Exception;
+    }
 
-        public boolean isComponentNode() {
-            return nodeType == NODE_TYPE_COMPONENT;
-        }
-        public boolean isParameterNode() {
-            return nodeType == NODE_TYPE_PARAMETER;
+    @RequiredArgsConstructor
+    @Getter
+    class ComponentNode implements StackNode {
+        private final ComponentResources componentResources;
+
+        @Override
+        public void onChild(StackNode childNode) throws Exception {
+            if (childNode instanceof ComponentNode) {
+                ComponentResources childResources = ((ComponentNode) childNode).getComponentResources();
+                Container parentContainer = (Container) componentResources.getComponent();
+                parentContainer.add(childResources.getComponent(), childResources.getConstraints());
+            } else if (childNode instanceof ParameterNode) {
+                ParameterNode parameterNode = (ParameterNode) childNode;
+                if (!parameterNode.isSet()) {
+                    String msg = String.format("Found zero elements for parameter '%s', expected 1", parameterNode.getName());
+                    throw new RuntimeException(msg);
+                }
+                memberAccessor.setProperty(componentResources.getController(), parameterNode.getName(), parameterNode.getComponent());
+            } else {
+                throw new RuntimeException();
+            }
         }
     }
 
+    @RequiredArgsConstructor
     @Getter
-    static class ComponentNode extends StackNode {
-        private final ComponentResources componentResources;
-        public ComponentNode(ComponentResources componentResources) {
-            super(NODE_TYPE_COMPONENT);
-            this.componentResources = componentResources;
-        }
+    static class ParameterNode implements StackNode {
+        private final String name;
+        private boolean isSet = false;
+        private ComponentResources componentResources;
 
-        public Object getController() {
-            return componentResources.getController();
+        @Override
+        public void onChild(StackNode child) {
+            if (isSet) {
+                String msg = String.format("Found multiple elements for parameter '%s', expected 1", name);
+                throw new RuntimeException(msg);
+            }
+            componentResources = ((ComponentNode) child).getComponentResources();
+            isSet = true;
         }
 
         public Component getComponent() {
@@ -70,55 +86,49 @@ public class ComponentSaxHandler extends DefaultHandler {
         }
     }
 
-    @Getter
-    static class ParameterNode extends StackNode {
-        private final List<Object> parameters = new ArrayList<>();
-
-        public ParameterNode() {
-            super(NODE_TYPE_PARAMETER);
-        }
-
-        public void addParameter(Object parameter) {
-            parameters.add(parameter);
-        }
-    }
-
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         try {
-            if (PARAMETER_NAMESPACE.equals(uri)) {
-                stack.push(new ParameterNode());
-                return;
-            }
-
-            int idIndex = attributes.getIndex("id");
-            String id = idIndex == -1 ? idGenerator.nextId(localName) : attributes.getValue(idIndex);
-            String constraints = attributes.getValue("constraints");
-            ComponentResources componentResources = componentFactory.create(localName, id, constraints, locator);
-            if (stack.isEmpty()) {
-                root = componentResources;
-            }
-            stack.push(new ComponentNode(componentResources));
-
-            for (int i = 0; i < attributes.getLength(); i++) {
-                String propName = attributes.getLocalName(i);
-                if (RESERVED_ATTRIBUTES.contains(propName)) {
-                    continue;
-                }
-                String stringValue = attributes.getValue(i);
-                Object value;
-                Matcher matcher = ATTRIBUTE_PATTERN.matcher(stringValue);
-                if (matcher.matches()) {
-                    Binding binding = bindingRegistry.get(matcher.group(1));
-                    value = binding.resolve(controller, matcher.group(2));
-                } else {
-                    value = stringValue;
-                }
-                memberAccessor.setProperty(componentResources.getComponent(), propName, value);
-            }
+            StackNode stackNode = PARAMETER_NAMESPACE.equals(uri)
+                    ? startParameter(uri, localName, qName, attributes)
+                    : startComponent(uri, localName, qName, attributes);
+            stack.push(stackNode);
         } catch (Exception e) {
             throw wrapException(localName, e);
         }
+    }
+
+    protected ParameterNode startParameter(String uri, String localName, String qName, Attributes attributes) {
+        return new ParameterNode(localName);
+    }
+
+    protected ComponentNode startComponent(String uri, String localName, String qName, Attributes attributes) throws Exception {
+        int idIndex = attributes.getIndex("id");
+        String id = idIndex == -1 ? idGenerator.nextId(localName) : attributes.getValue(idIndex);
+        String constraints = attributes.getValue("constraints");
+        ComponentResources componentResources = componentFactory.create(localName, id, constraints, locator);
+
+        if (root == null) {
+            root = componentResources;
+        }
+
+        for (int i = 0; i < attributes.getLength(); i++) {
+            String propName = attributes.getLocalName(i);
+            if (RESERVED_ATTRIBUTES.contains(propName)) {
+                continue;
+            }
+            String stringValue = attributes.getValue(i);
+            Object value;
+            Matcher matcher = ATTRIBUTE_PATTERN.matcher(stringValue);
+            if (matcher.matches()) {
+                Binding binding = bindingRegistry.get(matcher.group(1));
+                value = binding.resolve(controller, matcher.group(2));
+            } else {
+                value = stringValue;
+            }
+            memberAccessor.setProperty(componentResources.getComponent(), propName, value);
+        }
+        return new ComponentNode(componentResources);
     }
 
     @Override
@@ -127,26 +137,7 @@ public class ComponentSaxHandler extends DefaultHandler {
             StackNode currentNode = stack.pop();
             StackNode parentNode = stack.peek();
             if (parentNode != null) {
-                if (parentNode.isComponentNode() && currentNode.isComponentNode()) {
-                    Container parentContainer = (Container) ((ComponentNode) parentNode).getComponent();
-                    ComponentResources currentResources = ((ComponentNode) currentNode).getComponentResources();
-                    parentContainer.add(currentResources.getComponent(), currentResources.getConstraints());
-                }
-                if (parentNode.isParameterNode()) {
-                    ParameterNode parameterNode = (ParameterNode) parentNode;
-                    ComponentNode componentNode = (ComponentNode) currentNode;
-                    parameterNode.addParameter(componentNode.getComponent());
-                }
-                if (currentNode.isParameterNode()) {
-                    List<Object> parameterValues = ((ParameterNode) currentNode).getParameters();
-                    if (parameterValues.size() == 1) {
-                        Object controller = ((ComponentNode) parentNode).getController();
-                        memberAccessor.setProperty(controller, localName, parameterValues.get(0));
-                    } else {
-                        String msg = String.format("Expected a single element, found %s", parameterValues.size());
-                        throw new RuntimeException(msg);
-                    }
-                }
+                parentNode.onChild(currentNode);
             }
         } catch (Exception e) {
             throw wrapException(localName, e);
