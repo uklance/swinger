@@ -1,11 +1,20 @@
 package com.swinger;
 
+import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+/**
+ * This {@link MemberAccessor} is implemented with the understanding that it will be used to access properties on swing
+ * components (eg {@link JLabel} and {@link JTextField}). To reduce the number of objects kept in cache this
+ * implementation chooses to cache getters/setters by declaring class since most of the swing classes share common base
+ * classes (eg {@link JComponent}). This means that finding the cached setter/getter might require walking up the
+ * superclass hierarchy each time (eg {@link JTextField} -> {@link JTextComponent} -> {@link JComponent})
+ */
 public class ReflectionMemberAccessor implements MemberAccessor {
     private final Map<Class<?>, Map<String, Method>> settersByDeclaringType = new ConcurrentHashMap<>();
     private final Map<Class<?>, Map<String, Method>> gettersByDeclaringType = new ConcurrentHashMap<>();
@@ -34,6 +43,7 @@ public class ReflectionMemberAccessor implements MemberAccessor {
 
     /**
      * Walks up the superclass hierarchy looking for the method by declaring class
+     * @return the setter/getter method if found, null if not found
      */
     protected Method findMethod(Class<?> type, String name, Map<Class<?>, Map<String, Method>> cache, Function<Class<?>, Map<String, Method>> initFunction) {
         for (Class<?> currentType = type; currentType != null; currentType = currentType.getSuperclass()) {
@@ -46,6 +56,9 @@ public class ReflectionMemberAccessor implements MemberAccessor {
         return null;
     }
 
+    /**
+     * Find all setX(...) or addX(...) methods declared in type
+     */
     protected Map<String, Method> initSetters(Class<?> type) {
         Map<String, Method> setters = new ConcurrentHashMap<>();
         for (Method method : type.getDeclaredMethods()) {
@@ -59,6 +72,9 @@ public class ReflectionMemberAccessor implements MemberAccessor {
         return setters;
     }
 
+    /**
+     * Find all getX(...) or isX(...) methods declared in type
+     */
     protected Map<String, Method> initGetters(Class<?> type) {
         Map<String, Method> getters = new ConcurrentHashMap<>();
         for (Method method : type.getDeclaredMethods()) {
@@ -74,6 +90,9 @@ public class ReflectionMemberAccessor implements MemberAccessor {
         return getters;
     }
 
+    /**
+     * @return the name with the prefix removed and the first character after the prefix lowered
+     */
     protected String lowerFirst(String name, int startIndex) {
         return Character.toLowerCase(name.charAt(startIndex)) + name.substring(startIndex + 1);
     }
