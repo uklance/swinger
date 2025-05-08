@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import javax.swing.*;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.util.List;
 import java.util.Map;
 
 public class SwingerTest {
@@ -19,14 +20,19 @@ public class SwingerTest {
     public void beforeEach() throws Exception {
         EventManager eventManager = new DefaultEventManager();
         MemberAccessor memberAccessor = new ReflectionMemberAccessor();
-        ComponentFactory componentFactory = new DefaultComponentFactory(Map.of(
+        Map<String, ComponentSource> componentSources = Map.of(
                 "panel", new SupplierComponentSource(JPanel::new),
                 "label", new SupplierComponentSource(JLabel::new),
                 "button", new SupplierComponentSource(JButton::new),
                 "text-field", new SupplierComponentSource(JTextField::new),
                 "text-area", new SupplierComponentSource(JTextArea::new),
                 "split-pane", new SupplierComponentSource(JSplitPane::new)
-        ));
+        );
+        List<ControllerFieldHandler> fieldHandlers = List.of();
+        List<ControllerMethodHandler> methodHandlers = List.of(
+                new OnEventComponentMethodHandler(eventManager)
+        );
+        ComponentFactory componentFactory = new DefaultComponentFactory(componentSources);
         BindingRegistry bindingRegistry = new DefaultBindingRegistry(Map.of(
                 "prop", new PropertyBinding(memberAccessor),
                 "event", new EventBinding(eventManager),
@@ -37,7 +43,7 @@ public class SwingerTest {
         factory.setNamespaceAware(true);
         SAXParser parser = factory.newSAXParser();
 
-        swinger = new Swinger(componentFactory, bindingRegistry, memberAccessor, parser);
+        swinger = new Swinger(componentFactory, bindingRegistry, memberAccessor, parser, fieldHandlers, methodHandlers);
     }
 
     @Test
