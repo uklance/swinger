@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 
 @AllArgsConstructor
 @Slf4j
-public class OnEventComponentMethodHandler implements ControllerMethodHandler {
+public class OnEventControllerMethodHandler implements ControllerMethodHandler {
     private final EventManager eventManager;
 
     @Override

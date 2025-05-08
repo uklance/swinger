@@ -30,7 +30,7 @@ public class SwingerTest {
         );
         List<ControllerFieldHandler> fieldHandlers = List.of();
         List<ControllerMethodHandler> methodHandlers = List.of(
-                new OnEventComponentMethodHandler(eventManager)
+                new OnEventControllerMethodHandler(eventManager)
         );
         ComponentFactory componentFactory = new DefaultComponentFactory(componentSources);
         BindingRegistry bindingRegistry = new DefaultBindingRegistry(Map.of(
