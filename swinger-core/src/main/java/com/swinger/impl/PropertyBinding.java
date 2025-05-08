@@ -1,5 +1,7 @@
-package com.swinger;
+package com.swinger.impl;
 
+import com.swinger.api.Binding;
+import com.swinger.api.MemberAccessor;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

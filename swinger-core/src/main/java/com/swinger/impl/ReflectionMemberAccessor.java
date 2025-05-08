@@ -1,9 +1,12 @@
-package com.swinger;
+package com.swinger.impl;
+
+import com.swinger.api.MemberAccessor;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -60,7 +63,7 @@ public class ReflectionMemberAccessor implements MemberAccessor {
      * Find all setX(...) or addX(...) methods declared in type
      */
     protected Map<String, Method> initSetters(Class<?> type) {
-        Map<String, Method> setters = new ConcurrentHashMap<>();
+        Map<String, Method> setters = new HashMap<>();
         for (Method method : type.getDeclaredMethods()) {
             String name = method.getName();
             if (Modifier.isPublic(method.getModifiers()) && method.getParameterCount() == 1 && name.length() > 3) {
@@ -76,7 +79,7 @@ public class ReflectionMemberAccessor implements MemberAccessor {
      * Find all getX(...) or isX(...) methods declared in type
      */
     protected Map<String, Method> initGetters(Class<?> type) {
-        Map<String, Method> getters = new ConcurrentHashMap<>();
+        Map<String, Method> getters = new HashMap<>();
         for (Method method : type.getDeclaredMethods()) {
             String name = method.getName();
             if (Modifier.isPublic(method.getModifiers()) && method.getParameterCount() == 0 && !void.class.equals(method.getReturnType())) {

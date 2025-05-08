@@ -1,10 +1,12 @@
 package com.swinger;
 
+import com.swinger.api.*;
+import com.swinger.impl.IdGenerator;
+import com.swinger.model.ComponentResources;
 import lombok.AllArgsConstructor;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
 
 @AllArgsConstructor

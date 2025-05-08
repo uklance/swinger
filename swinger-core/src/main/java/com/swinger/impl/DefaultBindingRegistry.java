@@ -1,5 +1,7 @@
-package com.swinger;
+package com.swinger.impl;
 
+import com.swinger.api.Binding;
+import com.swinger.api.BindingRegistry;
 import lombok.AllArgsConstructor;
 
 import java.util.Map;

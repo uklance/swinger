@@ -1,4 +1,4 @@
-package com.swinger.annotations;
+package com.swinger.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

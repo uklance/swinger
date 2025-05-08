@@ -1,5 +1,7 @@
 package com.swinger;
 
+import com.swinger.api.MemberAccessor;
+import com.swinger.impl.ReflectionMemberAccessor;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;

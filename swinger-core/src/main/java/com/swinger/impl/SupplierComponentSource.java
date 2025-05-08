@@ -1,5 +1,7 @@
-package com.swinger;
+package com.swinger.impl;
 
+import com.swinger.model.ComponentResources;
+import com.swinger.api.ComponentSource;
 import lombok.AllArgsConstructor;
 import org.xml.sax.Locator;
 

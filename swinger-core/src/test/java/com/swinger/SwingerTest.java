@@ -1,5 +1,8 @@
 package com.swinger;
 
+import com.swinger.api.*;
+import com.swinger.impl.*;
+import com.swinger.model.ComponentResources;
 import com.swinger.test.Panel1;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.swinger;
+package com.swinger.impl;
 
 import java.util.concurrent.atomic.AtomicLong;
 

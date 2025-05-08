@@ -1,4 +1,6 @@
-package com.swinger;
+package com.swinger.impl;
+
+import com.swinger.api.Binding;
 
 public class LiteralBinding implements Binding {
     @Override

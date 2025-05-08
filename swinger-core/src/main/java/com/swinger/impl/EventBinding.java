@@ -1,5 +1,7 @@
-package com.swinger;
+package com.swinger.impl;
 
+import com.swinger.api.Binding;
+import com.swinger.api.EventManager;
 import lombok.AllArgsConstructor;
 
 import java.awt.event.ActionEvent;

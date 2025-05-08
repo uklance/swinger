@@ -1,5 +1,9 @@
-package com.swinger;
+package com.swinger.api;
 
+import com.swinger.impl.IdGenerator;
+import com.swinger.exception.LocationException;
+import com.swinger.model.ComponentResources;
+import com.swinger.model.Location;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.xml.sax.Attributes;

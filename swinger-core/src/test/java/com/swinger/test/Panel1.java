@@ -1,6 +1,6 @@
 package com.swinger.test;
 
-import com.swinger.annotations.OnEvent;
+import com.swinger.annotation.OnEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.event.ActionListener;

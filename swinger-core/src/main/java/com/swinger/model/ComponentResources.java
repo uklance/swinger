@@ -1,4 +1,4 @@
-package com.swinger;
+package com.swinger.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
