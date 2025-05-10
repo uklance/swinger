@@ -25,7 +25,7 @@ public class OnEventControllerMethodHandler implements ControllerMethodHandler {
             try {
                 method.invoke(controller);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error("event={}", event, ex);
             }
         });
     }

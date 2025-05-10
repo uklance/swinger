@@ -1,7 +1,8 @@
 package com.swinger.api;
 
-import com.swinger.impl.IdGenerator;
+import com.swinger.Swinger;
 import com.swinger.exception.LocationException;
+import com.swinger.impl.IdGenerator;
 import com.swinger.model.ComponentResources;
 import com.swinger.model.Location;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class ComponentSaxHandler extends DefaultHandler {
     private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("([^:]*):(.*)");
     private static final Set<String> RESERVED_ATTRIBUTES = Set.of("id", "constraints");
 
+    private final Swinger swinger;
     private final Object controller;
     private final ComponentFactory componentFactory;
     private final BindingRegistry bindingRegistry;
@@ -110,7 +112,7 @@ public class ComponentSaxHandler extends DefaultHandler {
         int idIndex = attributes.getIndex("id");
         String id = idIndex == -1 ? idGenerator.nextId(localName) : attributes.getValue(idIndex);
         String constraints = attributes.getValue("constraints");
-        ComponentResources componentResources = componentFactory.create(localName, id, constraints, locator);
+        ComponentResources componentResources = componentFactory.create(swinger, localName, id, constraints);
 
         if (root == null) {
             root = componentResources;

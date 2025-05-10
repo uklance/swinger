@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,7 +22,7 @@ public class Swinger {
     private final ComponentFactory componentFactory;
     private final BindingRegistry bindingRegistry;
     private final MemberAccessor memberAccessor;
-    private final SAXParser parser;
+    private final SAXParserFactory saxParserFactory;
     private final List<ControllerFieldHandler> fieldHandlers;
     private final List<ControllerMethodHandler> methodHandlers;
     private final Map<Class<?>, Consumer<Object>> initializerCache = new ConcurrentHashMap<>();
@@ -31,9 +32,10 @@ public class Swinger {
     }
 
     public ComponentResources createComponent(Class<?> controllerType, IdGenerator idGenerator) throws Exception {
+        SAXParser parser = saxParserFactory.newSAXParser();
         String xmlPath = String.format("%s.xml", controllerType.getName().replace('.', '/'));
         Object controller = createController(controllerType);
-        ComponentSaxHandler saxHandler = new ComponentSaxHandler(controller, componentFactory, bindingRegistry, memberAccessor, idGenerator);
+        ComponentSaxHandler saxHandler = new ComponentSaxHandler(this, controller, componentFactory, bindingRegistry, memberAccessor, idGenerator);
         try (InputStream in = controllerType.getClassLoader().getResourceAsStream(xmlPath)) {
             if (in == null) {
                 throw new RuntimeException("No such resource " + xmlPath);
@@ -67,6 +69,9 @@ public class Swinger {
                     .filter(h -> h.supportsMethod(method))
                     .findFirst()
                     .ifPresent(h -> consumers.add(controller -> h.handleMethod(method, controller)));
+        }
+        if (consumers.isEmpty()) {
+            return controller -> {};
         }
         return controller -> {
             for (Consumer<Object> consumer : consumers) {

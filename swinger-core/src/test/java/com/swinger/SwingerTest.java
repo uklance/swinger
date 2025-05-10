@@ -3,6 +3,7 @@ package com.swinger;
 import com.swinger.api.*;
 import com.swinger.impl.*;
 import com.swinger.model.ComponentResources;
+import com.swinger.test.ButtonABC;
 import com.swinger.test.Panel1;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,8 @@ public class SwingerTest {
                 "button", new SupplierComponentSource(JButton::new),
                 "text-field", new SupplierComponentSource(JTextField::new),
                 "text-area", new SupplierComponentSource(JTextArea::new),
-                "split-pane", new SupplierComponentSource(JSplitPane::new)
+                "split-pane", new SupplierComponentSource(JSplitPane::new),
+                "button-abc", new SwingerComponentSource(ButtonABC.class)
         );
         List<ControllerFieldHandler> fieldHandlers = List.of();
         List<ControllerMethodHandler> methodHandlers = List.of(
@@ -39,11 +41,10 @@ public class SwingerTest {
                 "new", new NewBinding(),
                 "literal", new LiteralBinding()
         ));
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        SAXParser parser = factory.newSAXParser();
+        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        saxParserFactory.setNamespaceAware(true);
 
-        swinger = new Swinger(componentFactory, bindingRegistry, memberAccessor, parser, fieldHandlers, methodHandlers);
+        swinger = new Swinger(componentFactory, bindingRegistry, memberAccessor, saxParserFactory, fieldHandlers, methodHandlers);
     }
 
     @Test
