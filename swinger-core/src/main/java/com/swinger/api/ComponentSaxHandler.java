@@ -114,10 +114,6 @@ public class ComponentSaxHandler extends DefaultHandler {
         String constraints = attributes.getValue("constraints");
         ComponentResources componentResources = componentFactory.create(swinger, localName, id, constraints);
 
-        if (root == null) {
-            root = componentResources;
-        }
-
         for (int i = 0; i < attributes.getLength(); i++) {
             String propName = attributes.getLocalName(i);
             if (RESERVED_ATTRIBUTES.contains(propName)) {
@@ -142,7 +138,10 @@ public class ComponentSaxHandler extends DefaultHandler {
         try {
             StackNode currentNode = stack.pop();
             StackNode parentNode = stack.peek();
-            if (parentNode != null) {
+            if (parentNode == null) {
+                ComponentResources resources = ((ComponentNode) currentNode).getComponentResources();
+                root = new ComponentResources(resources.getId(), controller, resources.getComponent(), resources.getConstraints());
+            } else {
                 parentNode.onChild(currentNode);
             }
         } catch (Exception e) {

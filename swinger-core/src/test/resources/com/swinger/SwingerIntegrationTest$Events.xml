@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<panel xmlns:p="swinger:parameter" layout="new:net.miginfocom.swing.MigLayout">
+    <button text="button1" actionListener="event:button1" />
+    <button text="button2" actionListener="event:button2" />
+</panel>
