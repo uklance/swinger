@@ -11,6 +11,10 @@ public class ClassloaderResource implements Resource {
     private final ClassLoader classLoader;
     private final String path;
 
+    public ClassloaderResource(Class<?> type, String path) {
+        this(type.getClassLoader(), path);
+    }
+
     @Override
     public String getName() {
         int slashIndex = path.lastIndexOf('/');
@@ -25,5 +29,12 @@ public class ClassloaderResource implements Resource {
     @Override
     public InputStream getInputStream() throws IOException {
         return classLoader.getResourceAsStream(path);
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        try (InputStream in = getInputStream()) {
+            return in != null;
+        }
     }
 }
