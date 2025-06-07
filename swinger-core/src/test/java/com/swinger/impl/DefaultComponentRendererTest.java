@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
 import javax.xml.parsers.SAXParserFactory;
-import java.util.ArrayList;
+import java.awt.*;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,27 +43,46 @@ public class DefaultComponentRendererTest {
 
         TestSwingWriter writer = new TestSwingWriter();
         componentRenderer.render(component, writer);
-        assertThat(writer.getComponents()).hasSize(1);
-        JPanel panel = (JPanel) writer.getComponents().get(0);
-        assertThat(panel.getComponents()).extracting(c -> c.getClass().getSimpleName()).containsExactly("foo");
+        JPanel panel = (JPanel) writer.getRoot();
+        assertThat(panel.getComponents())
+                .extracting(c -> c.getClass().getSimpleName())
+                .containsExactly("foo");
     }
 
     private ComponentTemplate parseTemplate(String path) throws Exception {
         return templateParser.parse(new ClassloaderResource(getClass(), path));
     }
 
-    @Getter
     public static class TestSwingWriter implements SwingWriter {
-        private List<java.awt.Component> components = new ArrayList<>();
+        @Getter private Component root;
+        private final LinkedList<Component> stack = new LinkedList<>(); 
 
         @Override
-        public void add(java.awt.Component component) {
-            components.add(component);
+        public void push(Component component) {
+            push(component, null);
         }
 
         @Override
-        public void add(java.awt.Component component, Object constraints) {
-            components.add(component);
+        public void push(Component component, Object constraints) {
+            if (stack.isEmpty()) {
+                if (root != null) {
+                    throw new RuntimeException("Multiple roots");
+                }
+                root = component;
+            } else {
+                Container container = (Container) stack.peek();
+                if (constraints != null) {
+                    container.add(component, constraints);
+                } else {
+                    container.add(component);
+                }
+            }
+            stack.add(component); 
+        }
+        
+        @Override
+        public Component pop() {
+            return stack.pop();
         }
     }
 }

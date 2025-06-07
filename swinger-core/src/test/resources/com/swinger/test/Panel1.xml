@@ -2,14 +2,14 @@
 <panel xmlns:p="swinger:parameter" layout="new:net.miginfocom.swing.MigLayout">
     <label text="label1" />
     <button text="button1" actionListener="prop:button1Listener" constraints="wrap"/>
-    <split-pane constraints="wrap, span, push, grow">
+    <splitPane constraints="wrap, span, push, grow">
         <p:leftComponent>
             <label text="left component" />
         </p:leftComponent>
         <p:rightComponent>
             <label text="right component" />
         </p:rightComponent>
-    </split-pane>
+    </splitPane>
     <button text="button2" actionListener="event:button2" />
     <button-abc />
 </panel>

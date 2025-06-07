@@ -1,6 +1,5 @@
 package com.swinger.io;
 
-import com.swinger.io.Resource;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;

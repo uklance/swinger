@@ -3,6 +3,7 @@ package com.swinger.impl;
 import com.swinger.api.ComponentFactory;
 import com.swinger.api.ComponentParser;
 import com.swinger.api.ComponentResources;
+import com.swinger.api.Controller;
 import com.swinger.sax.ComponentTemplateNode;
 import com.swinger.sax.ParameterTemplateNode;
 import lombok.AllArgsConstructor;
@@ -19,11 +20,11 @@ public class PackageComponentFactory implements ComponentFactory {
 
     @Override
     public ComponentResources create(String name, List<ParameterTemplateNode> parameters, List<ComponentTemplateNode> components) throws Exception {
-        Class type = null;
+        Class<? extends Controller> type = null;
         String simpleName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (Iterator<String> pkgIt = packages.iterator(); pkgIt.hasNext() && type == null; ) {
             try {
-                type = classLoader.loadClass(pkgIt.next() + '.' + simpleName);
+                type = (Class<? extends Controller>) classLoader.loadClass(pkgIt.next() + '.' + simpleName);
             } catch (ClassNotFoundException e) {}
         }
         if (type == null) {

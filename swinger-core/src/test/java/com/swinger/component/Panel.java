@@ -8,20 +8,18 @@ import javax.swing.*;
 
 public class Panel implements Controller {
     @Getter
-    //@DelegateProperties
     private JPanel panel;
 
-    private Object constraints;
-
     @Override
-    public boolean beginRender(SwingWriter writer) {
+    public boolean beforeRenderBody(SwingWriter writer) {
         panel = new JPanel();
-        return false;
+        writer.push(panel);
+        return true;
     }
 
     @Override
-    public boolean afterRender(SwingWriter writer) {
-        writer.add(panel, constraints);
+    public boolean afterRenderBody(SwingWriter writer) {
+        writer.pop();
         return true;
     }
 }

@@ -6,14 +6,14 @@ import lombok.Getter;
 
 import javax.swing.*;
 
-public class Button implements Controller {
+public class Label implements Controller {
     @Getter
-    private JButton button;
+    private JLabel label;
 
     @Override
     public boolean beforeRenderBody(SwingWriter writer) {
-        button = new JButton();
-        writer.push(button);
+        label = new JLabel();
+        writer.push(label);
         return true;
     }
 

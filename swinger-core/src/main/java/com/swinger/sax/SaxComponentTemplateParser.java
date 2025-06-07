@@ -18,6 +18,7 @@ public class SaxComponentTemplateParser implements ComponentTemplateParser  {
         SAXParser saxParser = saxParserFactory.newSAXParser();
         try (InputStream in = resource.getInputStream()) {
             InputSource inputSource = new InputSource(in);
+            inputSource.setPublicId(resource.getPath());
             inputSource.setSystemId(resource.getPath());
             saxParser.parse(inputSource, saxHandler);
         }

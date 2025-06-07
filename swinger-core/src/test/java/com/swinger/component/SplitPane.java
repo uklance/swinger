@@ -6,14 +6,14 @@ import lombok.Getter;
 
 import javax.swing.*;
 
-public class Button implements Controller {
+public class SplitPane implements Controller {
     @Getter
-    private JButton button;
+    private JSplitPane splitPane;
 
     @Override
     public boolean beforeRenderBody(SwingWriter writer) {
-        button = new JButton();
-        writer.push(button);
+        splitPane = new JSplitPane();
+        writer.push(splitPane);
         return true;
     }
 

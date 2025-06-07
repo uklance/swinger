@@ -3,6 +3,7 @@ package com.swinger.api;
 import java.awt.*;
 
 public interface SwingWriter {
-    void add(Component component);
-    void add(Component component, Object constraints);
+    void push(Component component);
+    void push(Component component, Object constraints);
+    Component pop();
 }

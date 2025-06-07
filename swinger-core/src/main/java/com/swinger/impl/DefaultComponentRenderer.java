@@ -1,5 +1,6 @@
 package com.swinger.impl;
 
+import com.swinger.LocationException;
 import com.swinger.api.*;
 import com.swinger.sax.ComponentTemplateNode;
 import com.swinger.sax.TemplateNode;
@@ -109,7 +110,13 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     protected void renderComponentTemplateNode(ComponentResources resources, ComponentTemplateNode templateNode, SwingWriter writer) throws Exception {
-        ComponentResources childComponent = componentFactory.create(templateNode.getName(), templateNode.getParameters(), templateNode.getComponents());
-        render(childComponent, templateNode.getComponents(), writer);
+        try {
+            ComponentResources childComponent = componentFactory.create(templateNode.getName(), templateNode.getParameters(), templateNode.getComponents());
+            render(childComponent, templateNode.getComponents(), writer);
+        } catch (LocationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new LocationException(templateNode.getLocation(), e);
+        }
     }
 }
