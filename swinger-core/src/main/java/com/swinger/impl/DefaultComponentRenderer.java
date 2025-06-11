@@ -6,10 +6,12 @@ import com.swinger.sax.ComponentTemplateNode;
 import com.swinger.sax.TemplateNode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class DefaultComponentRenderer implements ComponentRenderer {
     @RequiredArgsConstructor
     @Getter
@@ -81,6 +83,7 @@ public class DefaultComponentRenderer implements ComponentRenderer {
         RenderNode currentNode = setupRender;
         while (currentNode != null) {
             boolean proceed = currentNode.getPredicate().test(controller, writer);
+            log.info("{} {} proceed={}", currentNode.getName(), resources.getController().getClass().getSimpleName(), proceed);
             if (proceed) {
                 if (currentNode.getAction() != null) {
                     currentNode.getAction().render(resources, body, writer);
@@ -93,26 +96,34 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     protected void renderTemplate(ComponentResources resources, List<ComponentTemplateNode> body, SwingWriter writer) throws Exception {
-        TemplateNode rootNode = resources.getTemplate().getRootNode();
-        if (rootNode == null) {
+        log.info("renderTemplate {} bodySize={} depth={}", resources.getController().getClass().getSimpleName(), body.size(), writer.depth());
+        if (resources.getTemplate() == null) {
+            log.info("         No template for {}", resources.getController().getClass().getSimpleName());
             return;
         }
-        if (rootNode.getType() != TemplateNode.Type.COMPONENT) {
-            throw new RuntimeException(String.format("Expected COMPONENT, found %s", rootNode.getType()));
-        }
-        renderComponentTemplateNode(resources, (ComponentTemplateNode) rootNode, writer);
+        ComponentTemplateNode rootNode = resources.getTemplate().getRootNode();
+        log.info("         Found template for {} at {}", resources.getController().getClass().getSimpleName(), rootNode.getLocation().getPublicId());
+        renderComponentTemplateNode(resources, rootNode, writer);
     }
 
     protected void renderBody(ComponentResources resources, List<ComponentTemplateNode> body, SwingWriter writer) throws Exception {
+        log.info("renderBody {} bodySize={} depth={}", resources.getController().getClass().getSimpleName(), body.size(), writer.depth());
         for (ComponentTemplateNode bodyNode : body) {
             renderComponentTemplateNode(resources, bodyNode, writer);
         }
     }
 
     protected void renderComponentTemplateNode(ComponentResources resources, ComponentTemplateNode templateNode, SwingWriter writer) throws Exception {
+        log.info("renderComponentTemplateNode [name:{}, line:{}, column:{}]", templateNode.getName(), templateNode.getLocation().getLineNumber(), templateNode.getLocation().getColumnNumber());
         try {
-            ComponentResources childComponent = componentFactory.create(templateNode.getName(), templateNode.getParameters(), templateNode.getComponents());
+            ComponentResources childComponent = componentFactory.create(templateNode);
+            int depthBefore = writer.depth();
             render(childComponent, templateNode.getComponents(), writer);
+            int depthAfter = writer.depth();
+            if (depthBefore != depthAfter) {
+                String msg = String.format("SwingWriter depth is different before (%s) and after (%s) rendering", depthBefore, depthAfter);
+                throw new LocationException(templateNode.getLocation(), msg);
+            }
         } catch (LocationException e) {
             throw e;
         } catch (Exception e) {

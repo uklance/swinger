@@ -6,22 +6,20 @@ import com.swinger.sax.ComponentTemplate;
 import com.swinger.sax.ComponentTemplateParser;
 import com.swinger.sax.SaxComponentTemplateParser;
 import com.swinger.test.Panel1;
-import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
 import javax.xml.parsers.SAXParserFactory;
-import java.awt.*;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DefaultComponentRendererTest {
     private ComponentRenderer componentRenderer;
     private ComponentTemplateParser templateParser;
-    private ComponentParser componentParser;
     private ComponentFactory componentFactory;
 
     @BeforeEach
@@ -30,9 +28,34 @@ public class DefaultComponentRendererTest {
         saxParserFactory.setNamespaceAware(true);
 
         templateParser = new SaxComponentTemplateParser(saxParserFactory);
-        componentParser = new DefaultComponentParser(templateParser, List.of(), List.of());
-        componentFactory = new PackageComponentFactory(getClass().getClassLoader(), componentParser, List.of("com.swinger.component"));
-        componentRenderer = new DefaultComponentRenderer(componentFactory);
+        ComponentFactory[] componentFactoryRef = new ComponentFactory[1];
+        ComponentFactory componentFactoryProxy = templateNode -> componentFactoryRef[0].create(templateNode);
+        componentRenderer = new DefaultComponentRenderer(componentFactoryProxy);
+
+        MemberAccessor memberAccessor = new ReflectionMemberAccessor();
+        List<ControllerFieldHandler> fieldHandlers = List.of();
+        List<ControllerMethodHandler> methodHandlers = List.of();
+        ClassLoader classLoader = getClass().getClassLoader();
+        Set<String> packages = Set.of("com.swinger.component");
+        EventManager eventManager = new DefaultEventManager();
+        BindingSourceRegistry bindingSourceRegistry = new DefaultBindingSourceRegistry(Map.of(
+                "new", new NewBindingSource(),
+                "event", new EventBindingSource(eventManager),
+                "prop", new PropertyBindingSource(memberAccessor),
+                "literal", new LiteralBindingSource()
+        ));
+
+        componentFactory = new PackageComponentFactory(
+                memberAccessor,
+                componentRenderer,
+                bindingSourceRegistry,
+                templateParser,
+                fieldHandlers,
+                methodHandlers,
+                classLoader,
+                packages
+        );
+        componentFactoryRef[0] = componentFactory;
     }
 
     @Test
@@ -41,48 +64,16 @@ public class DefaultComponentRendererTest {
         Controller controller = new Panel1();
         ComponentResources component = new DefaultComponentResources(controller, template);
 
-        TestSwingWriter writer = new TestSwingWriter();
+        DefaultSwingWriter writer = new DefaultSwingWriter();
         componentRenderer.render(component, writer);
-        JPanel panel = (JPanel) writer.getRoot();
+        assertThat(writer.getRoots()).hasSize(1);
+        JPanel panel = (JPanel) writer.getRoots().get(0);
         assertThat(panel.getComponents())
                 .extracting(c -> c.getClass().getSimpleName())
-                .containsExactly("foo");
+                .containsExactly("JLabel", "JButton", "JSplitPane", "JButton");
     }
 
     private ComponentTemplate parseTemplate(String path) throws Exception {
         return templateParser.parse(new ClassloaderResource(getClass(), path));
-    }
-
-    public static class TestSwingWriter implements SwingWriter {
-        @Getter private Component root;
-        private final LinkedList<Component> stack = new LinkedList<>(); 
-
-        @Override
-        public void push(Component component) {
-            push(component, null);
-        }
-
-        @Override
-        public void push(Component component, Object constraints) {
-            if (stack.isEmpty()) {
-                if (root != null) {
-                    throw new RuntimeException("Multiple roots");
-                }
-                root = component;
-            } else {
-                Container container = (Container) stack.peek();
-                if (constraints != null) {
-                    container.add(component, constraints);
-                } else {
-                    container.add(component);
-                }
-            }
-            stack.add(component); 
-        }
-        
-        @Override
-        public Component pop() {
-            return stack.pop();
-        }
     }
 }

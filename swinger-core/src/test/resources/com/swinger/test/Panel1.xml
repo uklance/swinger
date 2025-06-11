@@ -11,5 +11,5 @@
         </p:rightComponent>
     </splitPane>
     <button text="button2" actionListener="event:button2" />
-    <button-abc />
+    <!--<button-abc />-->
 </panel>

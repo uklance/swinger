@@ -1,26 +1,37 @@
 package com.swinger.impl;
 
-import com.swinger.api.ComponentFactory;
-import com.swinger.api.ComponentParser;
-import com.swinger.api.ComponentResources;
-import com.swinger.api.Controller;
+import com.swinger.api.*;
 import com.swinger.sax.ComponentTemplateNode;
-import com.swinger.sax.ParameterTemplateNode;
-import lombok.AllArgsConstructor;
+import com.swinger.sax.ComponentTemplateParser;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
-public class PackageComponentFactory implements ComponentFactory {
+public class PackageComponentFactory extends AbstractComponentFactory {
     private final ClassLoader classLoader;
-    private final ComponentParser componentParser;
-    private final List<String> packages;
+    private final Set<String> packages;
+
+    public PackageComponentFactory(
+            MemberAccessor memberAccessor,
+            ComponentRenderer componentRenderer,
+            BindingSourceRegistry bindingSourceRegistry,
+            ComponentTemplateParser templateParser,
+            List<ControllerFieldHandler> fieldHandlers,
+            List<ControllerMethodHandler> methodHandlers,
+            ClassLoader classLoader,
+            Set<String> packages
+    ) {
+        super(memberAccessor, componentRenderer, bindingSourceRegistry, templateParser, fieldHandlers, methodHandlers);
+        this.classLoader = classLoader;
+        this.packages = packages;
+    }
 
     @Override
-    public ComponentResources create(String name, List<ParameterTemplateNode> parameters, List<ComponentTemplateNode> components) throws Exception {
+    protected Class<? extends Controller> resolveControllerType(ComponentTemplateNode templateNode) {
         Class<? extends Controller> type = null;
+        String name = templateNode.getName();
         String simpleName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (Iterator<String> pkgIt = packages.iterator(); pkgIt.hasNext() && type == null; ) {
             try {
@@ -31,6 +42,6 @@ public class PackageComponentFactory implements ComponentFactory {
             String msg = String.format("Could not find type %s in packages %s", simpleName, packages.stream().collect(Collectors.joining(", ")));
             throw new RuntimeException(msg);
         }
-        return componentParser.parse(type);
+        return type;
     }
 }

@@ -22,7 +22,7 @@ public class SaxComponentTemplateParser implements ComponentTemplateParser  {
             inputSource.setSystemId(resource.getPath());
             saxParser.parse(inputSource, saxHandler);
         }
-        TemplateNode rootNode = saxHandler.getRootNode();
+        ComponentTemplateNode rootNode = (ComponentTemplateNode) saxHandler.getRootNode();
         return () -> rootNode;
     }
 }
