@@ -30,14 +30,15 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
     protected abstract Class<? extends Controller> resolveControllerType(ComponentTemplateNode templateNode);
 
     @Override
-    public ComponentResources create(ComponentTemplateNode templateNode) throws Exception {
-        Class<? extends Controller> type = resolveControllerType(templateNode);
+    public ComponentResources create(ComponentTemplateNode componentNode) throws Exception {
+        Class<? extends Controller> type = resolveControllerType(componentNode);
         Controller controller = type.getDeclaredConstructor().newInstance();
+        applyFieldHandlers(controller);
+        applyMethodHandlers(controller);
         ComponentTemplate template = resolveComponentTemplate(type);
         ComponentResources resources = new DefaultComponentResources(controller, template);
-        applyFieldHandlers(resources);
-        applyMethodHandlers(resources);
-        applyProperties(resources);
+        applyAttributeProperties(resources, componentNode);
+        applyParameterProperties(resources, componentNode);
         return resources;
     }
 
@@ -49,8 +50,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
                 : null;
     }
 
-    protected void applyFieldHandlers(ComponentResources resources) {
-        Controller controller = resources.getController();
+    protected void applyFieldHandlers(Controller controller) {
         for (Class<?> currentType = controller.getClass(); currentType != null; currentType = currentType.getSuperclass()) {
             for (Field field : currentType.getDeclaredFields()) {
                 fieldHandlers.stream()
@@ -61,8 +61,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
         }
     }
 
-    protected void applyMethodHandlers(ComponentResources resources) {
-        Controller controller = resources.getController();
+    protected void applyMethodHandlers(Controller controller) {
         for (Class<?> currentType = controller.getClass(); currentType != null; currentType = currentType.getSuperclass()) {
             for (Method method : currentType.getDeclaredMethods()) {
                 methodHandlers.stream()
@@ -73,13 +72,9 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
         }
     }
 
-    protected void applyProperties(ComponentResources resources) throws Exception {
-        if (resources.getTemplate() == null) {
-            return;
-        }
+    protected void applyAttributeProperties(ComponentResources resources, ComponentTemplateNode componentNode) throws Exception {
+        Attributes attributes = componentNode.getAttributes();
         Controller controller = resources.getController();
-        ComponentTemplateNode rootNode = resources.getTemplate().getRootNode();
-        Attributes attributes = rootNode.getAttributes();
         for (int i = 0; i < attributes.getLength(); ++i) {
             String attUri = attributes.getURI(i);
             String attName = attributes.getLocalName(i);
@@ -99,12 +94,16 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
                 memberAccessor.setProperty(controller, attName, attValue);
             } else {
                 String msg = String.format("Unsupported uri %s for attribute %s", attUri, attName);
-                throw new LocationException(rootNode.getLocation(), msg);
+                throw new LocationException(componentNode.getLocation(), msg);
             }
         }
-        for (ParameterTemplateNode parameter : rootNode.getParameters()) {
+    }
+
+    protected void applyParameterProperties(ComponentResources resources, ComponentTemplateNode componentNode) throws Exception {
+        Controller controller = resources.getController();
+        for (ParameterTemplateNode parameter : componentNode.getParameters()) {
             if (parameter.getComponent() == null) {
-                String msg = String.format("No components for parameter %s of component %s", parameter.getName(), rootNode.getName());
+                String msg = String.format("No components for parameter %s of component %s", parameter.getName(), componentNode.getName());
                 throw new LocationException(parameter.getLocation(), msg);
             }
             ComponentResources parameterResources = create(parameter.getComponent());
@@ -112,7 +111,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
             componentRenderer.render(parameterResources, swingWriter);
             if (swingWriter.getRoots().size() != 1) {
                 String msg = String.format("Expected 1 component for parameter %s of component %s found %s",
-                        parameter.getName(), rootNode.getName(), swingWriter.getRoots().size());
+                        parameter.getName(), componentNode.getName(), swingWriter.getRoots().size());
                 throw new LocationException(parameter.getLocation(), msg);
             }
             memberAccessor.setProperty(controller, parameter.getName(), swingWriter.getRoots().get(0));

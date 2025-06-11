@@ -71,6 +71,9 @@ public class DefaultComponentRendererTest {
         assertThat(panel.getComponents())
                 .extracting(c -> c.getClass().getSimpleName())
                 .containsExactly("JLabel", "JButton", "JSplitPane", "JButton");
+
+        JLabel label0 = (JLabel) panel.getComponents()[0];
+        assertThat(label0.getText()).isEqualTo("foo");
     }
 
     private ComponentTemplate parseTemplate(String path) throws Exception {
