@@ -3,15 +3,12 @@ package com.swinger.impl;
 import com.swinger.LocationException;
 import com.swinger.api.*;
 import com.swinger.sax.ComponentTemplateNode;
-import com.swinger.sax.TemplateNode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
 
-@Slf4j
 public class DefaultComponentRenderer implements ComponentRenderer {
     @RequiredArgsConstructor
     @Getter
@@ -83,7 +80,6 @@ public class DefaultComponentRenderer implements ComponentRenderer {
         RenderNode currentNode = setupRender;
         while (currentNode != null) {
             boolean proceed = currentNode.getPredicate().test(controller, writer);
-            log.info("{} {} proceed={}", currentNode.getName(), resources.getController().getClass().getSimpleName(), proceed);
             if (proceed) {
                 if (currentNode.getAction() != null) {
                     currentNode.getAction().render(resources, body, writer);
@@ -96,27 +92,22 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     protected void renderTemplate(ComponentResources resources, List<ComponentTemplateNode> body, SwingWriter writer) throws Exception {
-        log.info("renderTemplate {} bodySize={} depth={}", resources.getController().getClass().getSimpleName(), body.size(), writer.depth());
         if (resources.getTemplate() == null) {
-            log.info("         No template for {}", resources.getController().getClass().getSimpleName());
             return;
         }
         ComponentTemplateNode rootNode = resources.getTemplate().getRootNode();
-        log.info("         Found template for {} at {}", resources.getController().getClass().getSimpleName(), rootNode.getLocation().getPublicId());
         renderComponentTemplateNode(resources, rootNode, writer);
     }
 
     protected void renderBody(ComponentResources resources, List<ComponentTemplateNode> body, SwingWriter writer) throws Exception {
-        log.info("renderBody {} bodySize={} depth={}", resources.getController().getClass().getSimpleName(), body.size(), writer.depth());
         for (ComponentTemplateNode bodyNode : body) {
             renderComponentTemplateNode(resources, bodyNode, writer);
         }
     }
 
     protected void renderComponentTemplateNode(ComponentResources resources, ComponentTemplateNode templateNode, SwingWriter writer) throws Exception {
-        log.info("renderComponentTemplateNode [name:{}, line:{}, column:{}]", templateNode.getName(), templateNode.getLocation().getLineNumber(), templateNode.getLocation().getColumnNumber());
         try {
-            ComponentResources childComponent = componentFactory.create(templateNode);
+            ComponentResources childComponent = componentFactory.create(resources, templateNode);
             int depthBefore = writer.depth();
             render(childComponent, templateNode.getComponents(), writer);
             int depthAfter = writer.depth();

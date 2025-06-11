@@ -15,12 +15,12 @@ public class PropertyBindingSource implements BindingSource {
         return new Binding() {
             @Override
             public Object get() throws Exception {
-                return memberAccessor.getProperty(resources.getController(), name);
+                return memberAccessor.getProperty(resources.getRoot().getController(), name);
             }
 
             @Override
             public void set(Object value) throws Exception {
-                memberAccessor.setProperty(resources.getController(), name, value);
+                memberAccessor.setProperty(resources.getRoot().getController(), name, value);
             }
         };
     }

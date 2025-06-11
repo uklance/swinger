@@ -9,6 +9,16 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class DefaultComponentResources implements ComponentResources {
+    private final ComponentResources parent;
     private final Controller controller;
     private final ComponentTemplate template;
+
+    @Override
+    public ComponentResources getRoot() {
+        ComponentResources current = this;
+        while (current.getParent() != null) {
+            current = current.getParent();
+        }
+        return current;
+    }
 }
