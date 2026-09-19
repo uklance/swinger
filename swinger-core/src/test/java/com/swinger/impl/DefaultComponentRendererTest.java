@@ -36,7 +36,7 @@ public class DefaultComponentRendererTest {
             }
 
             @Override
-            public ComponentResources create(Class<? extends Controller> type) throws Exception {
+            public ComponentResources create(Class<?> type) throws Exception {
                 return componentFactoryRef[0].create(type);
             }
         };

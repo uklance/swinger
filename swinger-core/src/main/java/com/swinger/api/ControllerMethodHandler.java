@@ -4,5 +4,5 @@ import java.lang.reflect.Method;
 
 public interface ControllerMethodHandler {
     boolean supportsMethod(Method method);
-    void handleMethod(Method method, Controller controller);
+    void handleMethod(Method method, Object controller);
 }

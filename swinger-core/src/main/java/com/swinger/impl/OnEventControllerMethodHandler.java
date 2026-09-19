@@ -20,7 +20,7 @@ public class OnEventControllerMethodHandler implements ControllerMethodHandler {
     }
 
     @Override
-    public void handleMethod(Method method, Controller controller) {
+    public void handleMethod(Method method, Object controller) {
         String event = method.getAnnotation(OnEvent.class).value();
         eventManager.subscribe(event, ev -> {
             try {
@@ -31,4 +31,3 @@ public class OnEventControllerMethodHandler implements ControllerMethodHandler {
         });
     }
 }
-

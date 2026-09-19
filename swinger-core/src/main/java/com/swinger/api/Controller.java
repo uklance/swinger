@@ -1,35 +1,12 @@
 package com.swinger.api;
 
 public interface Controller {
-    default boolean setupRender(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean beginRender(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean beforeRenderTemplate(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean beforeRenderBody(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean afterRenderBody(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean afterRenderTemplate(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean afterRender(SwingWriter writer) throws Exception {
-        return true;
-    }
-
-    default boolean cleanupRender(SwingWriter writer) throws Exception {
-        return true;
-    }
+    boolean setupRender(Object instance, SwingWriter writer) throws Exception;
+    boolean beginRender(Object instance, SwingWriter writer) throws Exception;
+    boolean beforeRenderTemplate(Object instance, SwingWriter writer);
+    boolean beforeRenderBody(Object instance, SwingWriter writer) throws Exception;
+    boolean afterRenderBody(Object instance, SwingWriter writer) throws Exception;
+    boolean afterRenderTemplate(Object instance, SwingWriter writer) throws Exception;
+    boolean afterRender(Object instance, SwingWriter writer) throws Exception;
+    boolean cleanupRender(Object instance, SwingWriter writer) throws Exception;
 }

@@ -1,6 +1,7 @@
 package com.swinger.component;
 
-import com.swinger.api.Controller;
+import com.swinger.annotation.AfterRenderBody;
+import com.swinger.annotation.BeforeRenderBody;
 import com.swinger.api.SwingWriter;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +10,7 @@ import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.util.Optional;
 
-public class Button implements Controller {
+public class Button {
     @Getter
     private JButton button;
 
@@ -22,7 +23,7 @@ public class Button implements Controller {
     @Setter
     private Object constraints;
 
-    @Override
+    @BeforeRenderBody
     public boolean beforeRenderBody(SwingWriter writer) {
         button = new JButton();
         Optional.ofNullable(text).ifPresent(button::setText);
@@ -31,7 +32,7 @@ public class Button implements Controller {
         return true;
     }
 
-    @Override
+    @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
         writer.pop();
         return true;

@@ -1,6 +1,7 @@
 package com.swinger.component;
 
-import com.swinger.api.Controller;
+import com.swinger.annotation.AfterRenderBody;
+import com.swinger.annotation.BeforeRenderBody;
 import com.swinger.api.SwingWriter;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,14 +9,14 @@ import lombok.Setter;
 import javax.swing.*;
 import java.awt.*;
 
-public class Panel implements Controller {
+public class Panel {
     @Getter
     private JPanel panel;
 
     @Setter
     private LayoutManager layout;
 
-    @Override
+    @BeforeRenderBody
     public boolean beforeRenderBody(SwingWriter writer) {
         panel = new JPanel();
         if (layout != null) {
@@ -25,7 +26,7 @@ public class Panel implements Controller {
         return true;
     }
 
-    @Override
+    @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
         writer.pop();
         return true;

@@ -1,6 +1,7 @@
 package com.swinger.component;
 
-import com.swinger.api.Controller;
+import com.swinger.annotation.AfterRenderBody;
+import com.swinger.annotation.BeforeRenderBody;
 import com.swinger.api.SwingWriter;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Optional;
 
-public class SplitPane implements Controller {
+public class SplitPane {
     @Getter
     private JSplitPane splitPane;
 
@@ -22,7 +23,7 @@ public class SplitPane implements Controller {
     @Setter
     private Component rightComponent;
 
-    @Override
+    @BeforeRenderBody
     public boolean beforeRenderBody(SwingWriter writer) {
         splitPane = new JSplitPane();
         Optional.ofNullable(leftComponent).ifPresent(splitPane::setLeftComponent);
@@ -31,7 +32,7 @@ public class SplitPane implements Controller {
         return true;
     }
 
-    @Override
+    @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
         writer.pop();
         return true;

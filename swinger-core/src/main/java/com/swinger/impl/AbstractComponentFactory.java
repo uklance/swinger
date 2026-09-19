@@ -27,11 +27,11 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
     private final List<ControllerFieldHandler> fieldHandlers;
     private final List<ControllerMethodHandler> methodHandlers;
 
-    protected abstract Class<? extends Controller> resolveControllerType(ComponentTemplateNode templateNode);
+    protected abstract Class<?> resolveControllerType(ComponentTemplateNode templateNode);
 
     @Override
-    public ComponentResources create(Class<? extends Controller> type) throws Exception {
-        Controller childController = type.getDeclaredConstructor().newInstance();
+    public ComponentResources create(Class<?> type) throws Exception {
+        Object childController = type.getDeclaredConstructor().newInstance();
         applyFieldHandlers(childController);
         applyMethodHandlers(childController);
         ComponentTemplate template = resolveComponentTemplate(type);
@@ -40,8 +40,8 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
 
     @Override
     public ComponentResources create(ComponentResources resources, ComponentTemplateNode componentNode) throws Exception {
-        Class<? extends Controller> type = resolveControllerType(componentNode);
-        Controller childController = type.getDeclaredConstructor().newInstance();
+        Class<?> type = resolveControllerType(componentNode);
+        Object childController = type.getDeclaredConstructor().newInstance();
         applyFieldHandlers(childController);
         applyMethodHandlers(childController);
         ComponentTemplate template = resolveComponentTemplate(type);
@@ -51,7 +51,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
         return childResources;
     }
 
-    protected ComponentTemplate resolveComponentTemplate(Class<? extends Controller> type) throws Exception {
+    protected ComponentTemplate resolveComponentTemplate(Class<?> type) throws Exception {
         String templatePath = type.getName().replace('.', '/') + ".xml";
         Resource templateResource = new ClassloaderResource(type, templatePath);
         return templateResource.exists()
@@ -59,7 +59,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
                 : null;
     }
 
-    protected void applyFieldHandlers(Controller controller) {
+    protected void applyFieldHandlers(Object controller) {
         for (Class<?> currentType = controller.getClass(); currentType != null; currentType = currentType.getSuperclass()) {
             for (Field field : currentType.getDeclaredFields()) {
                 fieldHandlers.stream()
@@ -70,7 +70,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
         }
     }
 
-    protected void applyMethodHandlers(Controller controller) {
+    protected void applyMethodHandlers(Object controller) {
         for (Class<?> currentType = controller.getClass(); currentType != null; currentType = currentType.getSuperclass()) {
             for (Method method : currentType.getDeclaredMethods()) {
                 methodHandlers.stream()

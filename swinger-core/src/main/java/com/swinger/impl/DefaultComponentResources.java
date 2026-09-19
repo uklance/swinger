@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public class DefaultComponentResources implements ComponentResources {
     private final ComponentResources parent;
-    private final Controller controller;
+    private final Object controller;
     private final ComponentTemplate template;
 
     @Override

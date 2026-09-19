@@ -29,13 +29,13 @@ public class PackageComponentFactory extends AbstractComponentFactory {
     }
 
     @Override
-    protected Class<? extends Controller> resolveControllerType(ComponentTemplateNode templateNode) {
-        Class<? extends Controller> type = null;
+    protected Class<?> resolveControllerType(ComponentTemplateNode templateNode) {
+        Class<?> type = null;
         String name = templateNode.getName();
         String simpleName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
         for (Iterator<String> pkgIt = packages.iterator(); pkgIt.hasNext() && type == null; ) {
             try {
-                type = (Class<? extends Controller>) classLoader.loadClass(pkgIt.next() + '.' + simpleName);
+                type = classLoader.loadClass(pkgIt.next() + '.' + simpleName);
             } catch (ClassNotFoundException e) {}
         }
         if (type == null) {
