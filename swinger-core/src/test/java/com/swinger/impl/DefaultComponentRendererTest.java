@@ -64,6 +64,7 @@ public class DefaultComponentRendererTest {
                 templateParser,
                 fieldHandlers,
                 methodHandlers,
+                new DefaultControllerFactory(),
                 classLoader,
                 packages
         );
@@ -81,7 +82,7 @@ public class DefaultComponentRendererTest {
                 .extracting(c -> c.getClass().getSimpleName())
                 .containsExactly("JLabel", "JButton", "JSplitPane", "JButton");
 
-        Panel1 root = (Panel1) component.getController();
+        Panel1 root = (Panel1) component.getComponentInstance();
         JLabel label1 = (JLabel) panel.getComponents()[0];
         JButton button1 = (JButton) panel.getComponents()[1];
         JButton button2 = (JButton) panel.getComponents()[3];

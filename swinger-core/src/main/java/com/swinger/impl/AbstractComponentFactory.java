@@ -8,7 +8,6 @@ import com.swinger.sax.ComponentTemplate;
 import com.swinger.sax.ComponentTemplateNode;
 import com.swinger.sax.ComponentTemplateParser;
 import com.swinger.sax.ParameterTemplateNode;
-import lombok.AllArgsConstructor;
 import org.xml.sax.Attributes;
 
 import java.lang.reflect.Field;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@AllArgsConstructor
 public abstract class AbstractComponentFactory implements ComponentFactory {
     private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("([^:]*):(.*)");
     private final MemberAccessor memberAccessor;
@@ -26,26 +24,46 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
     private final ComponentTemplateParser templateParser;
     private final List<ControllerFieldHandler> fieldHandlers;
     private final List<ControllerMethodHandler> methodHandlers;
+    private final ControllerFactory controllerFactory;
 
-    protected abstract Class<?> resolveControllerType(ComponentTemplateNode templateNode);
+    protected AbstractComponentFactory(
+            MemberAccessor memberAccessor,
+            ComponentRenderer componentRenderer,
+            BindingSourceRegistry bindingSourceRegistry,
+            ComponentTemplateParser templateParser,
+            List<ControllerFieldHandler> fieldHandlers,
+            List<ControllerMethodHandler> methodHandlers,
+            ControllerFactory controllerFactory
+    ) {
+        this.memberAccessor = memberAccessor;
+        this.componentRenderer = componentRenderer;
+        this.bindingSourceRegistry = bindingSourceRegistry;
+        this.templateParser = templateParser;
+        this.fieldHandlers = fieldHandlers;
+        this.methodHandlers = methodHandlers;
+        this.controllerFactory = controllerFactory;
+    }
+    protected abstract Class<?> resolveComponentType(ComponentTemplateNode templateNode);
 
     @Override
     public ComponentResources create(Class<?> type) throws Exception {
-        Object childController = type.getDeclaredConstructor().newInstance();
-        applyFieldHandlers(childController);
-        applyMethodHandlers(childController);
+        Object componentInstance = type.getDeclaredConstructor().newInstance();
+        Controller controller = controllerFactory.create(type);
+        applyFieldHandlers(componentInstance);
+        applyMethodHandlers(componentInstance);
         ComponentTemplate template = resolveComponentTemplate(type);
-        return new DefaultComponentResources(null, childController, template);
+        return new DefaultComponentResources(null, componentInstance, controller, template);
     }
 
     @Override
     public ComponentResources create(ComponentResources resources, ComponentTemplateNode componentNode) throws Exception {
-        Class<?> type = resolveControllerType(componentNode);
-        Object childController = type.getDeclaredConstructor().newInstance();
-        applyFieldHandlers(childController);
-        applyMethodHandlers(childController);
+        Class<?> type = resolveComponentType(componentNode);
+        Object componentInstance = type.getDeclaredConstructor().newInstance();
+        Controller controller = controllerFactory.create(type);
+        applyFieldHandlers(componentInstance);
+        applyMethodHandlers(componentInstance);
         ComponentTemplate template = resolveComponentTemplate(type);
-        ComponentResources childResources = new DefaultComponentResources(resources, childController, template);
+        ComponentResources childResources = new DefaultComponentResources(resources, componentInstance, controller, template);
         applyAttributeProperties(childResources, componentNode);
         applyParameterProperties(childResources, componentNode);
         return childResources;
@@ -99,7 +117,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
                 } else {
                     attValue = attStringValue;
                 }
-                memberAccessor.setProperty(resources.getController(), attName, attValue);
+                memberAccessor.setProperty(resources.getComponentInstance(), attName, attValue);
             } else {
                 String msg = String.format("Unsupported uri %s for attribute %s", attUri, attName);
                 throw new LocationException(componentNode.getLocation(), msg);
@@ -121,7 +139,7 @@ public abstract class AbstractComponentFactory implements ComponentFactory {
                         parameter.getName(), componentNode.getName(), swingWriter.getRoots().size());
                 throw new LocationException(parameter.getLocation(), msg);
             }
-            memberAccessor.setProperty(resources.getController(), parameter.getName(), swingWriter.getRoots().get(0));
+            memberAccessor.setProperty(resources.getComponentInstance(), parameter.getName(), swingWriter.getRoots().get(0));
         }
     }
 }

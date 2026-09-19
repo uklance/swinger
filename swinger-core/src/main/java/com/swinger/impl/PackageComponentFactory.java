@@ -20,16 +20,17 @@ public class PackageComponentFactory extends AbstractComponentFactory {
             ComponentTemplateParser templateParser,
             List<ControllerFieldHandler> fieldHandlers,
             List<ControllerMethodHandler> methodHandlers,
+            ControllerFactory controllerFactory,
             ClassLoader classLoader,
             Set<String> packages
     ) {
-        super(memberAccessor, componentRenderer, bindingSourceRegistry, templateParser, fieldHandlers, methodHandlers);
+        super(memberAccessor, componentRenderer, bindingSourceRegistry, templateParser, fieldHandlers, methodHandlers, controllerFactory);
         this.classLoader = classLoader;
         this.packages = packages;
     }
 
     @Override
-    protected Class<?> resolveControllerType(ComponentTemplateNode templateNode) {
+    protected Class<?> resolveComponentType(ComponentTemplateNode templateNode) {
         Class<?> type = null;
         String name = templateNode.getName();
         String simpleName = Character.toUpperCase(name.charAt(0)) + name.substring(1);

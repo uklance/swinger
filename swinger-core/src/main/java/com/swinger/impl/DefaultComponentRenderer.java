@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +32,7 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     interface RenderPredicate {
-        boolean test(Object instance, SwingWriter writer) throws Exception;
+        boolean test(Object instance, Controller controller, SwingWriter writer) throws Exception;
     }
 
     interface RenderAction {
@@ -53,21 +51,21 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     private final ComponentFactory componentFactory;
 
     public DefaultComponentRenderer(ComponentFactory componentFactory) {
-        setupRender = new RenderNode("setupRender", (instance, writer) -> invokeLifecycle(instance, SetupRender.class, writer,
+        setupRender = new RenderNode("setupRender", (instance, controller, writer) -> invokeLifecycle(instance, SetupRender.class, writer, controller,
                 Controller::setupRender));
-        beginRender = new RenderNode("beginRender", (instance, writer) -> invokeLifecycle(instance, BeginRender.class, writer,
+        beginRender = new RenderNode("beginRender", (instance, controller, writer) -> invokeLifecycle(instance, BeginRender.class, writer, controller,
                 Controller::beginRender));
-        beforeRenderTemplate = new RenderNode("beforeRenderTemplate", (instance, writer) -> invokeLifecycle(instance, BeforeRenderTemplate.class, writer,
+        beforeRenderTemplate = new RenderNode("beforeRenderTemplate", (instance, controller, writer) -> invokeLifecycle(instance, BeforeRenderTemplate.class, writer, controller,
                 Controller::beforeRenderTemplate), this::renderTemplate);
-        beforeRenderBody = new RenderNode("beforeRenderBody", (instance, writer) -> invokeLifecycle(instance, BeforeRenderBody.class, writer,
+        beforeRenderBody = new RenderNode("beforeRenderBody", (instance, controller, writer) -> invokeLifecycle(instance, BeforeRenderBody.class, writer, controller,
                 Controller::beforeRenderBody), this::renderBody);
-        afterRenderBody = new RenderNode("afterRenderBody", (instance, writer) -> invokeLifecycle(instance, AfterRenderBody.class, writer,
+        afterRenderBody = new RenderNode("afterRenderBody", (instance, controller, writer) -> invokeLifecycle(instance, AfterRenderBody.class, writer, controller,
                 Controller::afterRenderBody));
-        afterRenderTemplate = new RenderNode("afterRenderTemplate", (instance, writer) -> invokeLifecycle(instance, AfterRenderTemplate.class, writer,
+        afterRenderTemplate = new RenderNode("afterRenderTemplate", (instance, controller, writer) -> invokeLifecycle(instance, AfterRenderTemplate.class, writer, controller,
                 Controller::afterRenderTemplate));
-        afterRender = new RenderNode("afterRender", (instance, writer) -> invokeLifecycle(instance, AfterRender.class, writer,
+        afterRender = new RenderNode("afterRender", (instance, controller, writer) -> invokeLifecycle(instance, AfterRender.class, writer, controller,
                 Controller::afterRender));
-        cleanupRender = new RenderNode("cleanupRender", (instance, writer) -> invokeLifecycle(instance, CleanupRender.class, writer,
+        cleanupRender = new RenderNode("cleanupRender", (instance, controller, writer) -> invokeLifecycle(instance, CleanupRender.class, writer, controller,
                 Controller::cleanupRender));
 
         setupRender.setChildren(beginRender, cleanupRender);
@@ -83,48 +81,9 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     private boolean invokeLifecycle(Object instance, Class<? extends Annotation> annotation, SwingWriter writer,
+                                    Controller controller,
                                     ControllerLifecycleFallback fallback) throws Exception {
-        boolean found = false;
-        boolean proceed = true;
-        for (Class<?> currentType = instance.getClass(); currentType != null; currentType = currentType.getSuperclass()) {
-            for (Method method : currentType.getDeclaredMethods()) {
-                if (method.getAnnotation(annotation) != null) {
-                    found = true;
-                    proceed &= invokeAnnotatedMethod(method, instance, writer);
-                }
-            }
-        }
-        if (!found && instance instanceof Controller) {
-            proceed = fallback.invoke((Controller) instance, instance, writer);
-        }
-        return proceed;
-    }
-
-    private boolean invokeAnnotatedMethod(Method method, Object instance, SwingWriter writer) throws Exception {
-        Object result;
-        try {
-            method.setAccessible(true);
-            if (method.getParameterCount() == 0) {
-                result = method.invoke(instance);
-            } else if (method.getParameterCount() == 1 && SwingWriter.class.isAssignableFrom(method.getParameterTypes()[0])) {
-                result = method.invoke(instance, writer);
-            } else {
-                throw new IllegalArgumentException("Lifecycle method must accept no parameters or a SwingWriter: " + method);
-            }
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof Exception) {
-                throw (Exception) cause;
-            }
-            throw e;
-        }
-        if (method.getReturnType() == void.class) {
-            return true;
-        }
-        if (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class) {
-            return Boolean.TRUE.equals(result);
-        }
-        throw new IllegalArgumentException("Lifecycle method must return boolean or void: " + method);
+        return controller == null || fallback.invoke(controller, instance, writer);
     }
 
     @FunctionalInterface
@@ -138,10 +97,11 @@ public class DefaultComponentRenderer implements ComponentRenderer {
     }
 
     protected void render(ComponentResources resources, List<ComponentTemplateNode> body, SwingWriter writer) throws Exception {
-        Object controller = resources.getController();
+        Object instance = resources.getComponentInstance();
+        Controller controller = resources.getController();
         RenderNode currentNode = setupRender;
         while (currentNode != null) {
-            boolean proceed = currentNode.getPredicate().test(controller, writer);
+            boolean proceed = currentNode.getPredicate().test(instance, controller, writer);
             if (proceed) {
                 if (currentNode.getAction() != null) {
                     currentNode.getAction().render(resources, body, writer);

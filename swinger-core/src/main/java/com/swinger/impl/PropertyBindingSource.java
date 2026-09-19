@@ -13,14 +13,18 @@ public class PropertyBindingSource implements BindingSource {
     @Override
     public Binding create(String name, ComponentResources resources) {
         return new Binding() {
+            private Object target() {
+                return resources.getRoot().getComponentInstance();
+            }
+
             @Override
             public Object get() throws Exception {
-                return memberAccessor.getProperty(resources.getRoot().getController(), name);
+                return memberAccessor.getProperty(target(), name);
             }
 
             @Override
             public void set(Object value) throws Exception {
-                memberAccessor.setProperty(resources.getRoot().getController(), name, value);
+                memberAccessor.setProperty(target(), name, value);
             }
         };
     }
