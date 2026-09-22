@@ -22,13 +22,13 @@ public class Panel {
         if (layout != null) {
             panel.setLayout(layout);
         }
-        writer.push(panel);
+        writer.startElement(panel, null);
         return true;
     }
 
     @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
-        writer.pop();
+        writer.endElement();
         return true;
     }
 }

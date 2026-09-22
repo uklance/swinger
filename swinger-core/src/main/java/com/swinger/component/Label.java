@@ -19,13 +19,13 @@ public class Label {
     public boolean beforeRenderBody(SwingWriter writer) {
         label = new JLabel();
         label.setText(text);
-        writer.push(label);
+        writer.startElement(label, null);
         return true;
     }
 
     @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
-        writer.pop();
+        writer.endElement();
         return true;
     }
 }

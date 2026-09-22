@@ -4,9 +4,12 @@ import com.swinger.model.Location;
 import lombok.Getter;
 import org.xml.sax.Attributes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ParameterTemplateNode extends AbstractTemplateNode {
     @Getter
-    private ComponentTemplateNode component;
+    private final List<ComponentTemplateNode> components = new ArrayList<>();
 
     public ParameterTemplateNode(String name, Attributes attributes, Location location) {
         super(name, attributes, location);
@@ -14,10 +17,7 @@ public class ParameterTemplateNode extends AbstractTemplateNode {
 
     @Override
     public void onChild(TemplateNode child) {
-        if (component != null) {
-            throw new RuntimeException("Multiple children for parameter " + getName());
-        }
-        component = (ComponentTemplateNode) child;
+        components.add((ComponentTemplateNode) child);
     }
 
     @Override

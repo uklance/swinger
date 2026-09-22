@@ -28,13 +28,13 @@ public class SplitPane {
         splitPane = new JSplitPane();
         Optional.ofNullable(leftComponent).ifPresent(splitPane::setLeftComponent);
         Optional.ofNullable(rightComponent).ifPresent(splitPane::setRightComponent);
-        writer.push(splitPane, constraints);
+        writer.startElement(splitPane, constraints);
         return true;
     }
 
     @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
-        writer.pop();
+        writer.endElement();
         return true;
     }
 }

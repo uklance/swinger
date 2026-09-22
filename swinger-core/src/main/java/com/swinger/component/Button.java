@@ -28,13 +28,13 @@ public class Button {
         button = new JButton();
         Optional.ofNullable(text).ifPresent(button::setText);
         Optional.ofNullable(actionListener).ifPresent(button::addActionListener);
-        writer.push(button, constraints);
+        writer.startElement(button, constraints);
         return true;
     }
 
     @AfterRenderBody
     public boolean afterRenderBody(SwingWriter writer) {
-        writer.pop();
+        writer.endElement();
         return true;
     }
 }
