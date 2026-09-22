@@ -74,18 +74,70 @@ public class DefaultComponentParser implements ComponentParser {
             ComponentInstance instance = definition.createInstance(propertyBindings);
             writer.startComponent(instance);
             Controller controller = definition.getController();
-            controller.setupRender(instance, writer);
-            controller.beginRender(instance, writer);
-            controller.beforeRenderTemplate(instance, writer);
-            templateCommand.render(writer);
-            controller.afterRenderTemplate(instance, writer);
-            controller.beforeRenderBody(instance, writer);
-            bodyCommand.render(writer);
-            controller.afterRenderBody(instance, writer);
-            controller.afterRender(instance, writer);
-            controller.cleanupRender(instance, writer);
-            writer.endComponent();
+            RenderState state = RenderState.SETUP_RENDER;
+            try {
+                while (state != null) {
+                    boolean proceed;
+                    switch (state) {
+                        case SETUP_RENDER:
+                            proceed = controller.setupRender(instance, writer);
+                            state = proceed ? RenderState.BEGIN_RENDER : RenderState.CLEANUP_RENDER;
+                            break;
+                        case BEGIN_RENDER:
+                            proceed = controller.beginRender(instance, writer);
+                            state = proceed ? RenderState.BEFORE_RENDER_TEMPLATE : RenderState.AFTER_RENDER;
+                            break;
+                        case BEFORE_RENDER_TEMPLATE:
+                            proceed = controller.beforeRenderTemplate(instance, writer);
+                            if (proceed) {
+                                templateCommand.render(writer);
+                                state = RenderState.BEFORE_RENDER_BODY;
+                            } else {
+                                state = RenderState.AFTER_RENDER_TEMPLATE;
+                            }
+                            break;
+                        case AFTER_RENDER_TEMPLATE:
+                            proceed = controller.afterRenderTemplate(instance, writer);
+                            state = proceed ? RenderState.AFTER_RENDER : RenderState.BEFORE_RENDER_TEMPLATE;
+                            break;
+                        case BEFORE_RENDER_BODY:
+                            proceed = controller.beforeRenderBody(instance, writer);
+                            if (proceed) {
+                                bodyCommand.render(writer);
+                            }
+                            state = RenderState.AFTER_RENDER_BODY;
+                            break;
+                        case AFTER_RENDER_BODY:
+                            proceed = controller.afterRenderBody(instance, writer);
+                            state = proceed ? RenderState.AFTER_RENDER_TEMPLATE : RenderState.BEFORE_RENDER_BODY;
+                            break;
+                        case AFTER_RENDER:
+                            proceed = controller.afterRender(instance, writer);
+                            state = proceed ? RenderState.CLEANUP_RENDER : RenderState.BEGIN_RENDER;
+                            break;
+                        case CLEANUP_RENDER:
+                            proceed = controller.cleanupRender(instance, writer);
+                            state = proceed ? null : RenderState.SETUP_RENDER;
+                            break;
+                        default:
+                            throw new IllegalStateException("Unknown render state " + state);
+                    }
+                }
+            } finally {
+                writer.endComponent();
+            }
         };
+    }
+
+    private enum RenderState {
+        SETUP_RENDER,
+        BEGIN_RENDER,
+        BEFORE_RENDER_TEMPLATE,
+        AFTER_RENDER_TEMPLATE,
+        BEFORE_RENDER_BODY,
+        AFTER_RENDER_BODY,
+        AFTER_RENDER,
+        CLEANUP_RENDER
     }
 
     private RenderCommand asRenderCommand(List<ComponentTemplateNode> templateNodes) throws Exception {
