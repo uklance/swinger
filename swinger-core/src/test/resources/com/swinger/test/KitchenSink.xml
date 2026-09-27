@@ -1,0 +1,10 @@
+<panel layout="new:net.miginfocom.swing.MigLayout">
+    <foreach items="people" item="person">
+        <label text="First Name" />
+        <textfield text="prop:person.firstName" bind="true" />
+        <label text="Last Name" />
+        <textfield text="prop:person.lastName" bind="true" />
+        <eventbutton test="Save Single" event="saveSingle" context="prop:person.id" constraints="wrap" />
+    </foreach>
+    <eventbutton test="Save All" event="saveAll" />
+</panel>

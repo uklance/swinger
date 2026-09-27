@@ -5,7 +5,10 @@ import com.swinger.api.*;
 import com.swinger.io.ClassloaderResource;
 import com.swinger.io.Resource;
 import com.swinger.model.RenderCommand;
-import com.swinger.sax.*;
+import com.swinger.sax.ComponentTemplate;
+import com.swinger.sax.ComponentTemplateNode;
+import com.swinger.sax.ComponentTemplateParser;
+import com.swinger.sax.ParameterTemplateNode;
 import lombok.AllArgsConstructor;
 import org.xml.sax.Attributes;
 
@@ -50,16 +53,18 @@ public class DefaultComponentParser implements ComponentParser {
         }
         List<PropertyBinding> propertyBindings = new ArrayList<>();
         RenderCommand templateCommand = asRenderCommand(List.of(templateNode));
-        ComponentDefinition definition = componentDefinitionSource.get(type, templateCommand, id, key);
+        RenderCommand bodyCommand = asRenderCommand(bodyNodes);
+        ComponentDefinition definition = componentDefinitionSource.get(type, id, key, templateCommand, bodyCommand);
         Map<String, PropertyDefinition> propertyDefinitions = definition.getPropertyDefinitions().stream()
                 .collect(toMap(PropertyDefinition::getName, Function.identity()));
         for (ParameterTemplateNode parameterNode : templateNode.getParameters()) {
             String name = parameterNode.getName();
-            if (!propertyDefinitions.containsKey(name)) {
+            PropertyDefinition propertyDefinition = propertyDefinitions.get(name);
+            if (propertyDefinition == null) {
                 throw new LocationException(templateNode.getLocation(), "Unexpected property: " + name);
             }
             RenderCommand renderCommand = asRenderCommand(parameterNode.getComponents());
-            propertyBindings.add(new DefaultPropertyBinding(name, instance -> renderCommand));
+            propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, instance -> renderCommand));
         }
         for (String name : attributeProperties.keySet()) {
             PropertyDefinition propertyDefinition = propertyDefinitions.get(name);
@@ -67,12 +72,12 @@ public class DefaultComponentParser implements ComponentParser {
                 throw new LocationException(templateNode.getLocation(), "Unexpected property: " + name);
             }
             Binding binding = asBinding(attributeProperties.get(name), propertyDefinition.getDefaultBindingPrefix());
-            propertyBindings.add(new DefaultPropertyBinding(name, binding));
+            propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, binding));
         }
-        RenderCommand bodyCommand = asRenderCommand(bodyNodes);
         return writer -> {
-            ComponentInstance instance = definition.createInstance(propertyBindings);
-            writer.startComponent(instance);
+            DefaultComponentInstances renderedChildren = new DefaultComponentInstances();
+            ComponentInstance instance = definition.createInstance(propertyBindings, writer.getRootInstance(), renderedChildren);
+            writer.startComponent(instance, renderedChildren::add);
             Controller controller = definition.getController();
             RenderState state = RenderState.SETUP_RENDER;
             try {
@@ -167,18 +172,6 @@ public class DefaultComponentParser implements ComponentParser {
         }
         return bindingSourceRegistry.get(prefix).create(sValue);
     }
-
-    /*
-    protected RenderCommand asRenderCommand(List<TemplateNode> nodes) {
-        return writer -> {
-            for (TemplateNode node : nodes) {
-                ComponentTemplateNode componentNode = (ComponentTemplateNode) node;
-                Class<?> componentType = componentTypeResolver.getComponentType(componentNode.getName());
-                RenderCommand renderCommand = asRenderCommand(componentNode);
-                renderCommand.render(writer);`
-            }
-        };
-    }*/
 
     protected ComponentTemplate resolveComponentTemplate(Class<?> type) throws Exception {
         String templatePath = type.getName().replace('.', '/') + ".xml";

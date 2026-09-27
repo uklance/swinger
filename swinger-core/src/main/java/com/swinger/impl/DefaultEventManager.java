@@ -2,6 +2,7 @@ package com.swinger.impl;
 
 import com.swinger.api.EventListener;
 import com.swinger.api.EventManager;
+import com.swinger.model.EventContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -27,9 +28,25 @@ public class DefaultEventManager implements EventManager {
     }
 
     @Override
-    public void publish(String event) {
-        log.info("publish {}", event);
+    public void publish(String event, Object context) {
+        log.info("publish {}, {}", event, context);
+        EventContext eventContext = new EventContext() {
+            @Override
+            public String getEvent() {
+                return event;
+            }
+
+            @Override
+            public Object getContext() {
+                return context;
+            }
+
+            @Override
+            public <T> T getContext(Class<T> type) {
+                return context == null ? null : type.cast(context);
+            }
+        };
         Set<EventListener> listenerSet = listenerMap.computeIfAbsent(event, k -> ConcurrentHashMap.newKeySet());
-        listenerSet.forEach(l -> l.onEvent(event));
+        listenerSet.forEach(l -> l.onEvent(eventContext));
     }
 }

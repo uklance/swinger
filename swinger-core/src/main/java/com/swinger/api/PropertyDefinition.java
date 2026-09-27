@@ -4,5 +4,5 @@ public interface PropertyDefinition {
     String getName();
     Class<?> getType();
     String getDefaultBindingPrefix();
-    void apply(ComponentInstance instance, Binding binding);
+    void apply(ComponentInstance instance, Binding binding) throws Exception;
 }

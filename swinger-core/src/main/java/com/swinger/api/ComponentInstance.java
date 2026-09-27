@@ -9,4 +9,5 @@ public interface ComponentInstance {
     Collection<ComponentInstance> getRenderedChildren();
     Collection<ComponentInstance> getRenderedChildren(String id);
     ComponentInstance getRenderedChild(String id, String key);
+    ComponentInstance getRootInstance();
 }

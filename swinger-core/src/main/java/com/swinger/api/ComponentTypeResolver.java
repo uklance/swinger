@@ -1,5 +1,5 @@
 package com.swinger.api;
 
 public interface ComponentTypeResolver {
-    Class<?> getComponentType(String name);
+    Class<?> getComponentType(String name) throws Exception;
 }

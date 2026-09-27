@@ -2,25 +2,33 @@ package com.swinger.impl;
 
 import com.swinger.api.ComponentInstance;
 import com.swinger.api.SwingWriter;
+import lombok.Getter;
 
 import java.awt.*;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class DefaultSwingWriter implements SwingWriter {
-    private final Deque<ComponentInstance> componentStack = new LinkedList<>();
+    private final Deque<Consumer<ComponentInstance>> childListenerStack = new LinkedList<>();
     private final Deque<Component> elementStack = new LinkedList<>();
-    private final List<Component> rootElements = new LinkedList<>();
+    @Getter private final List<Component> rootElements = new LinkedList<>();
+    private ComponentInstance rootInstance;
 
     @Override
-    public void startComponent(ComponentInstance component) {
-        componentStack.push(component);
+    public void startComponent(ComponentInstance component, Consumer<ComponentInstance> childListener) {
+        if (childListenerStack.isEmpty()) {
+            rootInstance = component;
+        } else {
+            childListenerStack.peek().accept(component);
+        }
+        childListenerStack.push(childListener);
     }
 
     @Override
     public void endComponent() {
-        componentStack.pop();
+        childListenerStack.pop();
     }
 
     @Override
@@ -45,5 +53,10 @@ public class DefaultSwingWriter implements SwingWriter {
     @Override
     public int elementDepth() {
         return elementStack.size();
+    }
+
+    @Override
+    public ComponentInstance getRootInstance() {
+        return rootInstance;
     }
 }

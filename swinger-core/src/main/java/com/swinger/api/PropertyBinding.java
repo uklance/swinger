@@ -1,6 +1,6 @@
 package com.swinger.api;
 
 public interface PropertyBinding {
-    String getName();
+    PropertyDefinition getDefinition();
     Binding getBinding();
 }
