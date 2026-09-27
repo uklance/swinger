@@ -70,6 +70,7 @@ public class DefaultComponentDefinitionSource implements ComponentDefinitionSour
                     properties.add(new FieldPropertyDefinition(field, field.getAnnotation(Property.class)));
                 }
                 if (field.isAnnotationPresent(ProxyProperties.class)) {
+                    field.setAccessible(true);
                     properties.addAll(getProxyProperties(field, field.getAnnotation(ProxyProperties.class)));
                 }
             }
@@ -80,10 +81,11 @@ public class DefaultComponentDefinitionSource implements ComponentDefinitionSour
     private List<PropertyDefinition> getProxyProperties(Field field, ProxyProperties annotation) {
         List<PropertyDefinition> properties = new ArrayList<>();
         Pattern includePattern = Pattern.compile(annotation.include());
+        Pattern excludePattern = annotation.exclude().isEmpty() ? null : Pattern.compile(annotation.exclude());
         for (Method method : field.getType().getMethods()) {
             if (method.getParameterCount() == 1) {
                 Matcher matcher = includePattern.matcher(method.getName());
-                if (matcher.matches()) {
+                if (matcher.matches() && (excludePattern == null || !excludePattern.matcher(method.getName()).matches())) {
                     properties.add(new ProxyPropertyDefinition(field, method, annotation, matcher.group(1)));
                 }
             }

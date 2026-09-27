@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Property {
     boolean required() default false;
-    String defaultBindingPrefix() default "";
+    String defaultBindingPrefix() default "literal";
 }

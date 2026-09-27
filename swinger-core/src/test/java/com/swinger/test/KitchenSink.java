@@ -3,6 +3,7 @@ package com.swinger.test;
 import com.swinger.annotation.Property;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -14,11 +15,11 @@ public class KitchenSink {
         private String lastName;
     }
 
-    @Property
+    @Getter @Setter
     private Person person;
 
-    @Property
-    private List<Person> people = List.of(
+    @Getter
+    private final List<Person> people = List.of(
         new Person("Alice", "Smith"),
         new Person("Bob", "Johnson"),
         new Person("Charlie", "Brown")

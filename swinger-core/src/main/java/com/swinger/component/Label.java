@@ -2,30 +2,28 @@ package com.swinger.component;
 
 import com.swinger.annotation.AfterRenderBody;
 import com.swinger.annotation.BeforeRenderBody;
+import com.swinger.annotation.Property;
+import com.swinger.annotation.ProxyProperties;
 import com.swinger.api.SwingWriter;
 import lombok.Getter;
-import lombok.Setter;
 
 import javax.swing.*;
 
 public class Label {
     @Getter
-    private JLabel label;
+    @ProxyProperties(exclude = "setDisplayedMnemonic")
+    private JLabel label = new JLabel();
 
-    @Setter
-    private String text;
+    @Property
+    private Object constraints;
 
     @BeforeRenderBody
-    public boolean beforeRenderBody(SwingWriter writer) {
-        label = new JLabel();
-        label.setText(text);
-        writer.startElement(label, null);
-        return true;
+    public void beforeRenderBody(SwingWriter writer) {
+        writer.startElement(label, constraints);
     }
 
     @AfterRenderBody
-    public boolean afterRenderBody(SwingWriter writer) {
+    public void afterRenderBody(SwingWriter writer) {
         writer.endElement();
-        return true;
     }
 }

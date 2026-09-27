@@ -13,7 +13,7 @@ import javax.swing.*;
 
 public class EventButton {
     @Getter
-    @ProxyProperties(include = "set(.+)")
+    @ProxyProperties(exclude = "setMnemonic")
     private final JButton button = new JButton();
 
     @Property(required = true)

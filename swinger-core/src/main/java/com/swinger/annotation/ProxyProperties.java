@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ProxyProperties {
     String include() default "set(.+)";
+    String exclude() default "";
     String prefix() default "";
-    String defaultBindingPrefix() default "";
+    String defaultBindingPrefix() default "literal";
 }

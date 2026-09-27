@@ -6,22 +6,23 @@ import com.swinger.annotation.Property;
 import com.swinger.annotation.ProxyProperties;
 import com.swinger.api.SwingWriter;
 import lombok.Getter;
-import lombok.Setter;
 
 import javax.swing.*;
-import java.awt.*;
 
-public class Panel {
+public class TextField {
     @Getter
-    @ProxyProperties(exclude = "setDisplayedMnemonic")
-    private JPanel panel = new JPanel();
+    @ProxyProperties(exclude = "setDisplayedMnemonic", defaultBindingPrefix = "literal")
+    private JTextField textField = new JTextField();
 
     @Property
     private Object constraints;
 
+    @Property
+    private boolean bind;
+
     @BeforeRenderBody
     public void beforeRenderBody(SwingWriter writer) {
-        writer.startElement(panel, constraints);
+        writer.startElement(textField, constraints);
     }
 
     @AfterRenderBody

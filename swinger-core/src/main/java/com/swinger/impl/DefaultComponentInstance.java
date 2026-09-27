@@ -24,7 +24,7 @@ public class DefaultComponentInstance implements ComponentInstance {
         for (PropertyBinding property : properties) {
             property.getDefinition().apply(this, property.getBinding());
         }
-        this.key = keyBinding.get(this);
+        this.key = keyBinding == null ? null : keyBinding.get(this);
         this.renderedChildren = renderedChildren;
     }
 
