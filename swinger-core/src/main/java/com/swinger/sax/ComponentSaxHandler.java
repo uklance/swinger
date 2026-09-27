@@ -24,10 +24,10 @@ public class ComponentSaxHandler extends DefaultHandler {
     }
 
     @Override
-    public void startElement(String uri, String name, String qName, Attributes attributes) throws SAXException {
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         AbstractTemplateNode node = PARAMETER_NAMESPACE.equals(uri)
-                ? new ParameterTemplateNode(name, new AttributesImpl(attributes), new Location(locator))
-                : new ComponentTemplateNode(name, new AttributesImpl(attributes), new Location(locator));
+                ? new ParameterTemplateNode(qName, new AttributesImpl(attributes), new Location(locator))
+                : new ComponentTemplateNode(qName, new AttributesImpl(attributes), new Location(locator));
         stack.push(node);
     }
 

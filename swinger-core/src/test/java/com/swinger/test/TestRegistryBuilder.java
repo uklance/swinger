@@ -6,14 +6,15 @@ import com.swinger.sax.ComponentTemplateParser;
 import com.swinger.sax.SaxComponentTemplateParser;
 
 import javax.xml.parsers.SAXParserFactory;
+import java.util.List;
 import java.util.Map;
 
 public class TestRegistryBuilder {
-    private String packageName;
+    private List<String> packages = List.of("com.swinger.component", "com.swinger.test.component");
     private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-    public TestRegistryBuilder withPackageName(String packageName) {
-        this.packageName = packageName;
+    public TestRegistryBuilder withPackages(List<String> packages) {
+        this.packages = packages;
         return this;
     }
 
@@ -23,9 +24,6 @@ public class TestRegistryBuilder {
     }
 
     public Registry build() {
-        if (packageName == null) {
-            throw new IllegalStateException("PackageName must be set");
-        }
         MemberAccessor memberAccessor = new ReflectionMemberAccessor();
         Map<String, BindingSource> bindingsSources = Map.of(
         "prop", new PropertyBindingSource(memberAccessor),
@@ -35,7 +33,7 @@ public class TestRegistryBuilder {
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
         ComponentTemplateParser templateParser = new SaxComponentTemplateParser(saxParserFactory);
         BindingSourceRegistry bindingSourceRegistry = new DefaultBindingSourceRegistry(bindingsSources);
-        ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packageName);
+        ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packages);
         ControllerSource controllerSource = new DefaultControllerSource();
         ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(controllerSource);
         ComponentParser componentParser = new DefaultComponentParser(templateParser, bindingSourceRegistry, componentTypeResolver, definitionSource);

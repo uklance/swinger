@@ -16,4 +16,11 @@ public class Location {
         this.lineNumber = locator.getLineNumber();
         this.columnNumber = locator.getColumnNumber();
     }
+
+    @Override
+    public String toString() {
+        int slashIndex = publicId.lastIndexOf('/');
+        String file = slashIndex >= 0 ? publicId.substring(slashIndex + 1) : publicId;
+        return String.format("%s[%s:%s]", file, lineNumber, columnNumber);
+    }
 }
