@@ -27,7 +27,7 @@ public class ForEach {
 
     @BeforeRenderBody
     void beforeRenderBody() throws Exception {
-        item.set(instance, iterator.next());
+        item.set(instance.getRootComponent(), iterator.next());
     }
 
     @AfterRenderBody
@@ -38,6 +38,6 @@ public class ForEach {
     @AfterRender
     void afterRender() throws Exception {
         iterator = null;
-        item.set(instance, null);
+        item.set(instance.getRootComponent(), null);
     }
 }

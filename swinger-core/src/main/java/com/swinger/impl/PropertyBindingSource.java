@@ -2,7 +2,6 @@ package com.swinger.impl;
 
 import com.swinger.api.Binding;
 import com.swinger.api.BindingSource;
-import com.swinger.api.ComponentInstance;
 import com.swinger.api.MemberAccessor;
 import lombok.AllArgsConstructor;
 
@@ -14,13 +13,13 @@ public class PropertyBindingSource implements BindingSource {
     public Binding create(String name) {
         return new Binding() {
             @Override
-            public Object get(ComponentInstance instance) throws Exception {
-                return memberAccessor.getProperty(instance.getInstance(), name);
+            public Object get(Object instance) throws Exception {
+                return memberAccessor.getProperty(instance, name);
             }
 
             @Override
-            public void set(ComponentInstance instance, Object value) throws Exception {
-                memberAccessor.setProperty(instance.getInstance(), name, value);
+            public void set(Object instance, Object value) throws Exception {
+                memberAccessor.setProperty(instance, name, value);
             }
         };
     }

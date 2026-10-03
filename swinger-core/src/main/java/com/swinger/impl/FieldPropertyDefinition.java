@@ -33,6 +33,6 @@ public class FieldPropertyDefinition implements PropertyDefinition {
 
     @Override
     public void apply(ComponentInstance instance, Binding binding) throws Exception {
-        field.set(instance.getInstance(), binding.get(instance.getRootInstance()));
+        field.set(instance.getRootComponent(), binding.get(instance.getRootComponent()));
     }
 }

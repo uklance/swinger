@@ -44,7 +44,7 @@ public class ProxyPropertyDefinition implements PropertyDefinition {
 
     @Override
     public void apply(ComponentInstance instance, Binding binding) throws Exception {
-        Object proxy = field.get(instance.getInstance());
-        setter.invoke(proxy, binding.get(instance.getRootInstance()));
+        Object proxy = field.get(instance.getComponent());
+        setter.invoke(proxy, binding.get(instance.getRootInstance().getComponent()));
     }
 }

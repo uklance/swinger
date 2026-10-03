@@ -107,7 +107,7 @@ public class DefaultControllerSource implements ControllerSource {
         return (instance, writer) -> {
             Object[] arguments = new Object[method.getParameterCount()];
             Arrays.fill(arguments, writer);
-            Object result = method.invoke(instance.getInstance(), arguments);
+            Object result = method.invoke(instance.getComponent(), arguments);
             if (method.getReturnType() == void.class) {
                 return Boolean.TRUE;
             }
