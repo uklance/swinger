@@ -16,6 +16,7 @@ public class ProxyPropertyDefinition implements PropertyDefinition {
     private final Field field;
     private final Method setter;
     private final String defaultBindingPrefix;
+    private final boolean isBinding;
 
     public ProxyPropertyDefinition(Field field, Method setter, ProxyProperties annotation, String nameGroup) {
         this.field = field;
@@ -25,6 +26,7 @@ public class ProxyPropertyDefinition implements PropertyDefinition {
         this.name = annotation.prefix().isEmpty()
                 ? decapitalize(nameGroup)
                 : annotation.prefix() + nameGroup;
+        this.isBinding = Binding.class == type;
     }
 
     @Override
@@ -45,6 +47,7 @@ public class ProxyPropertyDefinition implements PropertyDefinition {
     @Override
     public void apply(ComponentInstance instance, Binding binding) throws Exception {
         Object proxy = field.get(instance.getComponent());
-        setter.invoke(proxy, binding.get(instance.getRootInstance().getComponent()));
+        Object value = isBinding ? binding : binding.get(instance.getRootInstance().getComponent());
+        setter.invoke(proxy, value);
     }
 }

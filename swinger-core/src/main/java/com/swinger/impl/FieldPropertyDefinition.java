@@ -10,10 +10,12 @@ import java.lang.reflect.Field;
 public class FieldPropertyDefinition implements PropertyDefinition {
     private final Field field;
     private final String defaultBindingPrefix;
+    private final boolean isBinding;
 
     public FieldPropertyDefinition(Field field, Property annotation) {
         this.field = field;
         this.defaultBindingPrefix = annotation.defaultBindingPrefix().isEmpty() ? null : annotation.defaultBindingPrefix();
+        this.isBinding = Binding.class == field.getType();
     }
 
     @Override
@@ -33,6 +35,7 @@ public class FieldPropertyDefinition implements PropertyDefinition {
 
     @Override
     public void apply(ComponentInstance instance, Binding binding) throws Exception {
-        field.set(instance.getRootComponent(), binding.get(instance.getRootComponent()));
+        Object value = isBinding ? binding : binding.get(instance.getRootComponent());
+        field.set(instance.getComponent(), value);
     }
 }
