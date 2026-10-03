@@ -10,6 +10,7 @@ import java.util.List;
 public class DefaultComponentDefinitionSource implements ComponentDefinitionSource {
     private final ControllerSource controllerSource;
     private final PropertyDefinitionSource propertyDefinitionSource;
+    private final ComponentInstanceSource componentInstanceSource;
 
     @Override
     public ComponentDefinition get(Class<?> type, String id, Binding keyBinding, RenderCommand template, RenderCommand body) throws Exception {
@@ -29,7 +30,7 @@ public class DefaultComponentDefinitionSource implements ComponentDefinitionSour
 
             @Override
             public ComponentInstance createInstance(List<PropertyBinding> properties, ComponentInstance rootInstance, ComponentInstances renderedChildren) throws Exception {
-                return new DefaultComponentInstance(this, properties, keyBinding, rootInstance, renderedChildren);
+                return componentInstanceSource.create(this, properties, keyBinding, rootInstance, renderedChildren);
             }
 
             @Override

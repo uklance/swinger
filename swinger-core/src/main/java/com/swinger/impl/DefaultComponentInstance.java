@@ -3,7 +3,6 @@ package com.swinger.impl;
 import com.swinger.api.*;
 
 import java.util.Collection;
-import java.util.List;
 
 public class DefaultComponentInstance implements ComponentInstance {
     private final ComponentDefinition definition;
@@ -14,17 +13,15 @@ public class DefaultComponentInstance implements ComponentInstance {
 
     public DefaultComponentInstance(
             ComponentDefinition definition,
-            List<PropertyBinding> properties,
-            Binding keyBinding, ComponentInstance rootInstance,
+            Object instance,
+            Object key,
+            ComponentInstance rootInstance,
             ComponentInstances renderedChildren
-    ) throws Exception {
+    ) {
         this.definition = definition;
-        this.instance = definition.getType().getDeclaredConstructor().newInstance();
-        this.rootInstance = rootInstance == null ? this : rootInstance;
-        for (PropertyBinding property : properties) {
-            property.getDefinition().apply(this, property.getBinding());
-        }
-        this.key = keyBinding == null ? null : keyBinding.get(instance);
+        this.instance = instance;
+        this.key = key;
+        this.rootInstance = rootInstance;
         this.renderedChildren = renderedChildren;
     }
 
@@ -60,6 +57,6 @@ public class DefaultComponentInstance implements ComponentInstance {
 
     @Override
     public ComponentInstance getRootInstance() {
-        return rootInstance;
+        return rootInstance == null ? this : rootInstance;
     }
 }
