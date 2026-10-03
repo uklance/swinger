@@ -8,7 +8,7 @@ public interface ComponentDefinition {
     Class<?> getType();
     String getId();
     ComponentInstance createInstance(List<PropertyBinding> properties, ComponentInstance rootInstance, ComponentInstances renderedChildren) throws Exception;
-    List<PropertyDefinition> getPropertyDefinitions();
+    PropertyDefinitions getPropertyDefinitions();
     Controller getController();
     RenderCommand body();
     RenderCommand template();

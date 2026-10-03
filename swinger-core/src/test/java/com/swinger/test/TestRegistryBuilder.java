@@ -35,7 +35,8 @@ public class TestRegistryBuilder {
         BindingSourceRegistry bindingSourceRegistry = new DefaultBindingSourceRegistry(bindingsSources);
         ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packages);
         ControllerSource controllerSource = new DefaultControllerSource();
-        ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(controllerSource);
+        PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource();
+        ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(controllerSource, propertyDefinitionSource);
         ComponentParser componentParser = new DefaultComponentParser(templateParser, bindingSourceRegistry, componentTypeResolver, definitionSource);
 
         Map<Class<?>, Object> registry = Map.of(
@@ -43,6 +44,7 @@ public class TestRegistryBuilder {
             BindingSourceRegistry.class, bindingSourceRegistry,
             ComponentTypeResolver.class, componentTypeResolver,
             ComponentDefinitionSource.class, definitionSource,
+            PropertyDefinitionSource.class, propertyDefinitionSource,
             ControllerSource.class, controllerSource,
             MemberAccessor.class, memberAccessor,
             ComponentTemplateParser.class, templateParser

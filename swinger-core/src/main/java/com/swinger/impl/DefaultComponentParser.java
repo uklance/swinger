@@ -13,9 +13,6 @@ import lombok.AllArgsConstructor;
 import org.xml.sax.Attributes;
 
 import java.util.*;
-import java.util.function.Function;
-
-import static java.util.stream.Collectors.toMap;
 
 @AllArgsConstructor
 public class DefaultComponentParser implements ComponentParser {
@@ -69,26 +66,25 @@ public class DefaultComponentParser implements ComponentParser {
                     ? emptyRenderCommand()
                     : asRenderCommand(invocationNode.getComponents());
             ComponentDefinition definition = componentDefinitionSource.get(type, id, key, templateCommand, bodyCommand);
-            Map<String, PropertyDefinition> propertyDefinitions = definition.getPropertyDefinitions().stream()
-                    .collect(toMap(PropertyDefinition::getName, Function.identity()));
+            PropertyDefinitions propertyDefinitions = definition.getPropertyDefinitions();
             List<PropertyBinding> propertyBindings = new ArrayList<>();
 
             if (invocationNode != null) {
                 for (ParameterTemplateNode parameterNode : invocationNode.getParameters()) {
-                    PropertyDefinition propertyDefinition = propertyDefinitions.get(parameterNode.getName());
-                    if (propertyDefinition == null) {
+                    if (!propertyDefinitions.contains(parameterNode.getName())) {
                         throw new LocationException(parameterNode.getLocation(),
                                 "Unexpected property: " + parameterNode.getName());
                     }
+                    PropertyDefinition propertyDefinition = propertyDefinitions.get(parameterNode.getName());
                     RenderCommand renderCommand = asRenderCommand(parameterNode.getComponents());
                     propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, instance -> renderCommand));
                 }
                 for (Map.Entry<String, String> attribute : attributeProperties.entrySet()) {
-                    PropertyDefinition propertyDefinition = propertyDefinitions.get(attribute.getKey());
-                    if (propertyDefinition == null) {
+                    if (!propertyDefinitions.contains(attribute.getKey())) {
                         throw new LocationException(invocationNode.getLocation(),
                                 "Unexpected property: " + attribute.getKey());
                     }
+                    PropertyDefinition propertyDefinition = propertyDefinitions.get(attribute.getKey());
                     Binding binding = asBinding(attribute.getValue(), propertyDefinition.getDefaultBindingPrefix());
                     propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, binding));
                 }
