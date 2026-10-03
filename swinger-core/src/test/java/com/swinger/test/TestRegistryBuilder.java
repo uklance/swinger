@@ -36,7 +36,9 @@ public class TestRegistryBuilder {
         ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packages);
         ControllerSource controllerSource = new DefaultControllerSource();
         PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource();
-        ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource();
+        ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource(
+                List.of(new InjectComponentDecorator())
+        );
         ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(
                 controllerSource,
                 propertyDefinitionSource,
