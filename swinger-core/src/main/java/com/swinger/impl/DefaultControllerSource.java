@@ -103,6 +103,7 @@ public class DefaultControllerSource implements ControllerSource {
                     "Lifecycle method must return void or boolean: " + method
             );
         }
+        method.setAccessible(true);
         return (instance, writer) -> {
             Object[] arguments = new Object[method.getParameterCount()];
             Arrays.fill(arguments, writer);

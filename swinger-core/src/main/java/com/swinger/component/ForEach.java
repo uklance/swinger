@@ -1,9 +1,6 @@
 package com.swinger.component;
 
-import com.swinger.annotation.AfterRenderBody;
-import com.swinger.annotation.BeforeRenderBody;
-import com.swinger.annotation.Property;
-import com.swinger.annotation.SetupRender;
+import com.swinger.annotation.*;
 import com.swinger.api.Binding;
 import com.swinger.api.ComponentInstance;
 
@@ -12,7 +9,7 @@ import java.util.Iterator;
 
 public class ForEach {
     @Inject
-    private ComponentInstance componentInstance;
+    private ComponentInstance instance;
 
     @Property(required = true, defaultBindingPrefix = "prop")
     private Iterable<?> items;
@@ -23,21 +20,24 @@ public class ForEach {
     private Iterator<?> iterator;
 
     @SetupRender
-    public void setupRender() {
+    boolean setupRender() {
         iterator = items.iterator();
+        return iterator.hasNext();
     }
 
     @BeforeRenderBody
-    public boolean beforeRenderBody() throws Exception {
-        if (!iterator.hasNext()) {
-            return false;
-        }
-        item.set(componentInstance, iterator.next());
-        return true;
+    void beforeRenderBody() throws Exception {
+        item.set(instance, iterator.next());
     }
 
     @AfterRenderBody
-    public boolean afterRenderBody() {
+    boolean afterRenderBody() {
         return !iterator.hasNext();
+    }
+
+    @AfterRender
+    void afterRender() throws Exception {
+        iterator = null;
+        item.set(instance, null);
     }
 }
