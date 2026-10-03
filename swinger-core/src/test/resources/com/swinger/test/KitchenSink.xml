@@ -4,7 +4,7 @@
         <textField text="prop:person.firstName" bind="true" />
         <label text="Last Name" />
         <textField text="prop:person.lastName" bind="true" />
-        <eventButton text="Save Single" event="saveSingle" context="prop:person.id" constraints="wrap" />
+        <eventButton text="Save Single" event="saveSingle" context="prop:person" constraints="wrap" />
     </forEach>
     <eventButton text="Save All" event="saveAll" />
 </panel>

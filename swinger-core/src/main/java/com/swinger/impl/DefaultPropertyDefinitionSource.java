@@ -5,6 +5,7 @@ import com.swinger.annotation.ProxyProperties;
 import com.swinger.api.PropertyDefinition;
 import com.swinger.api.PropertyDefinitionSource;
 import com.swinger.api.PropertyDefinitions;
+import com.swinger.api.PropertyValueConverter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -15,7 +16,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefaultPropertyDefinitionSource implements PropertyDefinitionSource {
+    private final PropertyValueConverter valueConverter;
     private final Map<Class<?>, PropertyDefinitions> definitionsByType = new ConcurrentHashMap<>();
+
+    public DefaultPropertyDefinitionSource(PropertyValueConverter valueConverter) {
+        this.valueConverter = valueConverter;
+    }
 
     @Override
     public PropertyDefinitions get(Class<?> type) {
@@ -28,7 +34,11 @@ public class DefaultPropertyDefinitionSource implements PropertyDefinitionSource
             for (Field field : current.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Property.class)) {
                     field.setAccessible(true);
-                    PropertyDefinition definition = new FieldPropertyDefinition(field, field.getAnnotation(Property.class));
+                    PropertyDefinition definition = new FieldPropertyDefinition(
+                            field,
+                            field.getAnnotation(Property.class),
+                            valueConverter
+                    );
                     definitions.putIfAbsent(definition.getName(), definition);
                 }
                 ProxyProperties proxyProperties = field.getAnnotation(ProxyProperties.class);
@@ -52,7 +62,7 @@ public class DefaultPropertyDefinitionSource implements PropertyDefinitionSource
                 Matcher matcher = includePattern.matcher(method.getName());
                 if (matcher.matches() && (excludePattern == null || !excludePattern.matcher(method.getName()).matches())) {
                     PropertyDefinition definition =
-                            new ProxyPropertyDefinition(field, method, annotation, matcher.group(1));
+                            new ProxyPropertyDefinition(field, method, annotation, matcher.group(1), valueConverter);
                     properties.putIfAbsent(definition.getName(), definition);
                 }
             }

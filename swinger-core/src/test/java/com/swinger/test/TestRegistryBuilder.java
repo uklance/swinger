@@ -7,6 +7,7 @@ import com.swinger.sax.SaxComponentTemplateParser;
 
 import javax.xml.parsers.SAXParserFactory;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TestRegistryBuilder {
@@ -24,6 +25,19 @@ public class TestRegistryBuilder {
     }
 
     public Registry build() {
+        Map<Class<?>, Object> registryInstances = new HashMap<>();
+        Registry registry = new Registry() {
+            @Override
+            public <T> T get(Class<T> type) {
+                Object instance = registryInstances.get(type);
+                if (instance == null) {
+                    throw new IllegalArgumentException("No instance registered for type: " + type.getName());
+                }
+                return type.cast(instance);
+            }
+        };
+        registryInstances.put(EventManager.class, new DefaultEventManager());
+
         MemberAccessor memberAccessor = new ReflectionMemberAccessor();
         Map<String, BindingSource> bindingsSources = Map.of(
         "prop", new PropertyBindingSource(memberAccessor),
@@ -35,9 +49,10 @@ public class TestRegistryBuilder {
         BindingSourceRegistry bindingSourceRegistry = new DefaultBindingSourceRegistry(bindingsSources);
         ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packages);
         ControllerSource controllerSource = new DefaultControllerSource();
-        PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource();
+        PropertyValueConverter propertyValueConverter = new DefaultPropertyValueConverter();
+        PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource(propertyValueConverter);
         ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource(
-                List.of(new InjectComponentDecorator())
+                List.of(new InjectComponentDecorator(registry))
         );
         ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(
                 controllerSource,
@@ -46,26 +61,16 @@ public class TestRegistryBuilder {
         );
         ComponentParser componentParser = new DefaultComponentParser(templateParser, bindingSourceRegistry, componentTypeResolver, definitionSource);
 
-        Map<Class<?>, Object> registry = Map.of(
-            ComponentParser.class, componentParser,
-            BindingSourceRegistry.class, bindingSourceRegistry,
-            ComponentTypeResolver.class, componentTypeResolver,
-            ComponentDefinitionSource.class, definitionSource,
-            PropertyDefinitionSource.class, propertyDefinitionSource,
-            ComponentInstanceSource.class, componentInstanceSource,
-            ControllerSource.class, controllerSource,
-            MemberAccessor.class, memberAccessor,
-            ComponentTemplateParser.class, templateParser
-        );
-
-        return new Registry() {
-            @Override
-            public <T> T get(Class<T> type) {
-                if (registry.containsKey(type)) {
-                    return type.cast(registry.get(type));
-                }
-                throw new IllegalArgumentException("No instance registered for type: " + type.getName());
-            }
-        };
+        registryInstances.put(ComponentParser.class, componentParser);
+        registryInstances.put(BindingSourceRegistry.class, bindingSourceRegistry);
+        registryInstances.put(ComponentTypeResolver.class, componentTypeResolver);
+        registryInstances.put(ComponentDefinitionSource.class, definitionSource);
+        registryInstances.put(PropertyDefinitionSource.class, propertyDefinitionSource);
+        registryInstances.put(ComponentInstanceSource.class, componentInstanceSource);
+        registryInstances.put(ControllerSource.class, controllerSource);
+        registryInstances.put(PropertyValueConverter.class, propertyValueConverter);
+        registryInstances.put(MemberAccessor.class, memberAccessor);
+        registryInstances.put(ComponentTemplateParser.class, templateParser);
+        return registry;
     }
 }
