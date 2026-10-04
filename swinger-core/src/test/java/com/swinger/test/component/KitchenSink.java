@@ -1,20 +1,12 @@
-package com.swinger.test;
+package com.swinger.test.component;
 
-import com.swinger.annotation.Property;
-import lombok.AllArgsConstructor;
+import com.swinger.test.model.Person;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
 public class KitchenSink {
-    @AllArgsConstructor
-    @Getter
-    public static class Person {
-        private String firstName;
-        private String lastName;
-    }
-
     @Getter @Setter
     private Person person;
 

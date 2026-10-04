@@ -39,7 +39,7 @@ public class DefaultSwingWriter implements SwingWriter {
             }
             rootElements.add(component);
         } else {
-            Container container = (Container) elementStack.getLast();
+            Container container = (Container) elementStack.peek();
             container.add(component, constraints);
         }
         elementStack.push(component);

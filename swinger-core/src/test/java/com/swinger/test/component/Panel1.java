@@ -1,4 +1,4 @@
-package com.swinger.test;
+package com.swinger.test.component;
 
 import com.swinger.annotation.OnEvent;
 import lombok.Getter;

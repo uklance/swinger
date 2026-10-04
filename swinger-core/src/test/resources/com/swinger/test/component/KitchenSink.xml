@@ -1,0 +1,6 @@
+<panel layout="new:net.miginfocom.swing.MigLayout">
+    <forEach items="people" item="person">
+        <personForm person="prop:person" />
+    </forEach>
+    <eventButton text="Save All" event="saveAll" />
+</panel>
