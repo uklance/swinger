@@ -49,6 +49,7 @@ public class TestRegistryBuilder {
         "new", new NewBindingSource()
         );
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        saxParserFactory.setNamespaceAware(true);
         ComponentTemplateParser templateParser = new SaxComponentTemplateParser(saxParserFactory);
         BindingSourceRegistry bindingSourceRegistry = new DefaultBindingSourceRegistry(bindingsSources);
         ComponentTypeResolver componentTypeResolver = new PackageComponentTypeResolver(classLoader, packages);
@@ -57,7 +58,8 @@ public class TestRegistryBuilder {
         PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource(propertyValueConverter);
         ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource(List.of(
                 new InjectComponentDecorator(registry),
-                new OnEventComponentDecorator(eventManager)
+                new OnEventComponentDecorator(eventManager),
+                new InjectComponentsComponentDecorator()
         ));
         ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(
                 controllerSource,

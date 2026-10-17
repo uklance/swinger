@@ -1,6 +1,6 @@
-<panel layout="new:net.miginfocom.swing.MigLayout">
+<panel layout="new:net.miginfocom.swing.MigLayout" xmlns:s="swinger">
     <forEach items="people" item="person">
-        <personForm person="prop:person" />
+        <personForm s:id="person" s:key="person.id" person="prop:person" />
     </forEach>
     <eventButton text="Save All" event="saveAll" />
 </panel>
