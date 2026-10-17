@@ -5,6 +5,8 @@ import com.swinger.api.EventManager;
 import com.swinger.model.EventContext;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,30 +25,32 @@ public class DefaultEventManager implements EventManager {
     @Override
     public boolean unsubscribe(String event, EventListener listener) {
         log.info("unsubscribe {}", event);
-        Set<EventListener> listenerSet = listenerMap.computeIfAbsent(event, k -> ConcurrentHashMap.newKeySet());
-        return listenerSet.remove(listener);
+        Set<EventListener> listenerSet = listenerMap.get(event);
+        if (listenerSet != null) {
+            return listenerSet.remove(listener);
+        }
+        return false;
     }
 
     @Override
-    public void publish(String event, Object context) {
-        log.info("publish {}, {}", event, context);
-        EventContext eventContext = new EventContext() {
-            @Override
-            public String getEvent() {
-                return event;
-            }
+    public void publish(String event, Object context) throws Exception {
+        Set<EventListener> listenerSet = listenerMap.get(event);
+        log.info("publish {}, {} to {} listeners", event, context, listenerSet == null ? 0 : listenerSet.size());
+        if (listenerSet != null) {
+            EventContext eventContext = new EventContext() {
+                @Override
+                public String getEvent() {
+                    return event;
+                }
 
-            @Override
-            public Object getContext() {
-                return context;
+                @Override
+                public Object getContext() {
+                    return context;
+                }
+            };
+            for (EventListener listener : listenerSet) {
+                listener.onEvent(eventContext);
             }
-
-            @Override
-            public <T> T getContext(Class<T> type) {
-                return context == null ? null : type.cast(context);
-            }
-        };
-        Set<EventListener> listenerSet = listenerMap.computeIfAbsent(event, k -> ConcurrentHashMap.newKeySet());
-        listenerSet.forEach(l -> l.onEvent(eventContext));
+        }
     }
 }

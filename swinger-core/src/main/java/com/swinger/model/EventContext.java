@@ -3,5 +3,7 @@ package com.swinger.model;
 public interface EventContext {
     String getEvent();
     Object getContext();
-    <T> T getContext(Class<T> type);
+    default <T> T getContext(Class<T> type) {
+        return type.cast(getContext());
+    }
 }

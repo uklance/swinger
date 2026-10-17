@@ -60,6 +60,6 @@ public class KitchenSinkTest {
         jframe.add(rootPanel);
         jframe.pack();
         jframe.setVisible(true);
-        Thread.sleep(2_000);
+        Thread.sleep(10_000);
     }
 }

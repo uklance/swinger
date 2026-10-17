@@ -41,8 +41,7 @@ public class TestRegistryBuilder {
                 return registryInstances.containsKey(type);
             }
         };
-        registryInstances.put(EventManager.class, new DefaultEventManager());
-
+        EventManager eventManager = new DefaultEventManager();
         MemberAccessor memberAccessor = new ReflectionMemberAccessor();
         Map<String, BindingSource> bindingsSources = Map.of(
         "prop", new PropertyBindingSource(memberAccessor),
@@ -56,9 +55,10 @@ public class TestRegistryBuilder {
         ControllerSource controllerSource = new DefaultControllerSource();
         PropertyValueConverter propertyValueConverter = new DefaultPropertyValueConverter();
         PropertyDefinitionSource propertyDefinitionSource = new DefaultPropertyDefinitionSource(propertyValueConverter);
-        ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource(
-                List.of(new InjectComponentDecorator(registry))
-        );
+        ComponentInstanceSource componentInstanceSource = new DefaultComponentInstanceSource(List.of(
+                new InjectComponentDecorator(registry),
+                new OnEventComponentDecorator(eventManager)
+        ));
         ComponentDefinitionSource definitionSource = new DefaultComponentDefinitionSource(
                 controllerSource,
                 propertyDefinitionSource,
@@ -76,6 +76,7 @@ public class TestRegistryBuilder {
         registryInstances.put(PropertyValueConverter.class, propertyValueConverter);
         registryInstances.put(MemberAccessor.class, memberAccessor);
         registryInstances.put(ComponentTemplateParser.class, templateParser);
+        registryInstances.put(EventManager.class, eventManager);
         return registry;
     }
 }

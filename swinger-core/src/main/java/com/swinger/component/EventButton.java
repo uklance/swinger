@@ -30,7 +30,13 @@ public class EventButton {
 
     @BeforeRenderBody
     public boolean beforeRenderBody(SwingWriter writer) {
-        button.addActionListener(e -> eventManager.publish(event, context));
+        button.addActionListener(e -> {
+            try {
+                eventManager.publish(event, context);
+            } catch (Exception ex) {
+                throw new RuntimeException("Error occurred while publishing event", ex);
+            }
+        });
         writer.startElement(button, constraints);
         return true;
     }
