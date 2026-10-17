@@ -35,6 +35,11 @@ public class TestRegistryBuilder {
                 }
                 return type.cast(instance);
             }
+
+            @Override
+            public boolean contains(Class<?> type) {
+                return registryInstances.containsKey(type);
+            }
         };
         registryInstances.put(EventManager.class, new DefaultEventManager());
 

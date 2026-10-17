@@ -73,7 +73,7 @@
                 </executions>
                 <configuration>
                     <scripts>
-                        <script>${project.basedir}/src/main/groovy/generate-swing-components.groovy</script>
+                        <script>${project.basedir}/build/generate-swing-components.groovy</script>
                     </scripts>
                     <properties>
                         <generatedSourcesDirectory>${project.build.directory}/generated/java</generatedSourcesDirectory>
