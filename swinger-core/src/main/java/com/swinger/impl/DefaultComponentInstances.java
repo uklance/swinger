@@ -20,7 +20,7 @@ public class DefaultComponentInstances implements ComponentInstances {
 
     @Override
     public Collection<ComponentInstance> get(String id) {
-        Collection<ComponentInstance> values = byId.getOrDefault(id, Collections.emptyList());
+        Collection<ComponentInstance> values = byId.get(id);
         if (values == null) {
             throw new IllegalStateException("ComponentInstances not found for id: " + id);
         }
