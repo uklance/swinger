@@ -8,7 +8,7 @@ public interface ComponentInstance {
     Object getComponent();
     Collection<ComponentInstance> getRenderedChildren();
     Collection<ComponentInstance> getRenderedChildren(String id);
-    ComponentInstance getRenderedChild(String id, String key);
+    ComponentInstance getRenderedChild(String id, Object key);
     ComponentInstance getRootInstance();
     default Object getRootComponent() {
         return getRootInstance().getComponent();

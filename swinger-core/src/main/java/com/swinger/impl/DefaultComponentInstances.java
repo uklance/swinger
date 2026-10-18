@@ -20,14 +20,18 @@ public class DefaultComponentInstances implements ComponentInstances {
 
     @Override
     public Collection<ComponentInstance> get(String id) {
-        return byId.getOrDefault(id, Collections.emptyList());
+        Collection<ComponentInstance> values = byId.getOrDefault(id, Collections.emptyList());
+        if (values == null) {
+            throw new IllegalStateException("ComponentInstances not found for id: " + id);
+        }
+        return values;
     }
 
     @Override
-    public ComponentInstance get(String id, String key) {
+    public ComponentInstance get(String id, Object key) {
         return get(id).stream()
                 .filter(c -> key.equals(c.getKey()))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new IllegalStateException("ComponentInstance not found for id: " + id + " and key: " + key));
     }
 }

@@ -1,6 +1,8 @@
 package com.swinger.impl;
 
-import com.swinger.api.*;
+import com.swinger.api.ComponentDefinition;
+import com.swinger.api.ComponentInstance;
+import com.swinger.api.ComponentInstances;
 
 import java.util.Collection;
 
@@ -51,7 +53,7 @@ public class DefaultComponentInstance implements ComponentInstance {
     }
 
     @Override
-    public ComponentInstance getRenderedChild(String id, String key) {
+    public ComponentInstance getRenderedChild(String id, Object key) {
         return renderedChildren.get(id, key);
     }
 

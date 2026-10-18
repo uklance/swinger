@@ -2,6 +2,7 @@ package com.swinger.test.component;
 
 import com.swinger.annotation.InjectComponents;
 import com.swinger.annotation.OnEvent;
+import com.swinger.api.ComponentsRef;
 import com.swinger.test.model.Person;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,11 +24,11 @@ public class KitchenSink {
     );
 
     @InjectComponents("person")
-    private Map<Long, PersonForm> personForms;
+    private ComponentsRef<Long, PersonForm> personForms;
 
     @OnEvent("saveSingle")
     public void onSaveSingle(Long personId) {
-        log.info("Person forms: {}", personForms);
+        log.info("Person forms: {}", personForms.keySet());
         log.info("Saving single person: {}", personId);
     }
 
