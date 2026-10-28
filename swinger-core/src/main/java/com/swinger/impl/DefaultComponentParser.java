@@ -16,6 +16,7 @@ import java.util.*;
 
 @AllArgsConstructor
 public class DefaultComponentParser implements ComponentParser {
+    private static final RenderCommand NOOP_RENDER_COMMAND = writer -> { };
     private static final String SWINGER_NAMESPACE = "swinger";
     private final ComponentTemplateParser templateParser;
     private final BindingSourceRegistry bindingSourceRegistry;
@@ -46,7 +47,7 @@ public class DefaultComponentParser implements ComponentParser {
                         if (!templateRoot && "id".equals(name)) {
                             id = attributes.getValue(i);
                         } else if (!templateRoot && "key".equals(name)) {
-                            key = asBinding(attributes.getValue(i), "literal");
+                            key = parseBinding(attributes.getValue(i), "literal");
                         } else if ("id".equals(name) || "key".equals(name)) {
                             continue;
                         } else {
@@ -60,10 +61,10 @@ public class DefaultComponentParser implements ComponentParser {
             }
 
             RenderCommand templateCommand = templateNode == null
-                    ? emptyRenderCommand()
+                    ? NOOP_RENDER_COMMAND
                     : componentNodeRenderCommand(templateNode, true);
             RenderCommand bodyCommand = invocationNode == null
-                    ? emptyRenderCommand()
+                    ? NOOP_RENDER_COMMAND
                     : asRenderCommand(invocationNode.getComponents());
             ComponentDefinition definition = componentDefinitionSource.get(type, id, key, templateCommand, bodyCommand);
             PropertyDefinitions propertyDefinitions = definition.getPropertyDefinitions();
@@ -85,76 +86,73 @@ public class DefaultComponentParser implements ComponentParser {
                                 "Unexpected property: " + attribute.getKey());
                     }
                     PropertyDefinition propertyDefinition = propertyDefinitions.get(attribute.getKey());
-                    Binding binding = asBinding(attribute.getValue(), propertyDefinition.getDefaultBindingPrefix());
+                    Binding binding = parseBinding(attribute.getValue(), propertyDefinition.getDefaultBindingPrefix());
                     propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, binding));
                 }
             }
-
-            return writer -> {
-                DefaultComponentInstances renderedChildren = new DefaultComponentInstances();
-                ComponentInstance instance = definition.createInstance(propertyBindings, writer.getRootInstance(), renderedChildren);
-                writer.startComponent(instance, renderedChildren::add);
-                Controller controller = definition.getController();
-                RenderState state = RenderState.SETUP_RENDER;
-                try {
-                    while (state != null) {
-                        boolean proceed;
-                        switch (state) {
-                            case SETUP_RENDER:
-                                proceed = controller.setupRender(instance, writer);
-                                state = proceed ? RenderState.BEGIN_RENDER : RenderState.CLEANUP_RENDER;
-                                break;
-                            case BEGIN_RENDER:
-                                proceed = controller.beginRender(instance, writer);
-                                state = proceed ? RenderState.BEFORE_RENDER_TEMPLATE : RenderState.AFTER_RENDER;
-                                break;
-                            case BEFORE_RENDER_TEMPLATE:
-                                proceed = controller.beforeRenderTemplate(instance, writer);
-                                if (proceed) {
-                                    templateCommand.render(writer);
-                                    state = RenderState.BEFORE_RENDER_BODY;
-                                } else {
-                                    state = RenderState.AFTER_RENDER_TEMPLATE;
-                                }
-                                break;
-                            case AFTER_RENDER_TEMPLATE:
-                                proceed = controller.afterRenderTemplate(instance, writer);
-                                state = proceed ? RenderState.AFTER_RENDER : RenderState.BEFORE_RENDER_TEMPLATE;
-                                break;
-                            case BEFORE_RENDER_BODY:
-                                proceed = controller.beforeRenderBody(instance, writer);
-                                if (proceed) {
-                                    bodyCommand.render(writer);
-                                }
-                                state = RenderState.AFTER_RENDER_BODY;
-                                break;
-                            case AFTER_RENDER_BODY:
-                                proceed = controller.afterRenderBody(instance, writer);
-                                state = proceed ? RenderState.AFTER_RENDER_TEMPLATE : RenderState.BEFORE_RENDER_BODY;
-                                break;
-                            case AFTER_RENDER:
-                                proceed = controller.afterRender(instance, writer);
-                                state = proceed ? RenderState.CLEANUP_RENDER : RenderState.BEGIN_RENDER;
-                                break;
-                            case CLEANUP_RENDER:
-                                proceed = controller.cleanupRender(instance, writer);
-                                state = proceed ? null : RenderState.SETUP_RENDER;
-                                break;
-                            default:
-                                throw new IllegalStateException("Unknown render state " + state);
-                        }
-                    }
-                } finally {
-                    writer.endComponent();
-                }
-            };
+            return writer -> render(writer, definition, propertyBindings, templateCommand, bodyCommand);
         } catch (Exception e) {
             throw new Exception("Error with " + type.getSimpleName(), e);
         }
     }
 
-    private RenderCommand emptyRenderCommand() {
-        return writer -> { };
+    private void render(SwingWriter writer, ComponentDefinition definition, List<PropertyBinding> propertyBindings, RenderCommand templateCommand, RenderCommand bodyCommand) throws Exception {
+        DefaultComponentInstances renderedChildren = new DefaultComponentInstances();
+        ComponentInstance instance = definition.createInstance(propertyBindings, writer.getRootInstance(), renderedChildren);
+        writer.startComponent(instance, renderedChildren::add);
+        try {
+            Controller controller = definition.getController();
+            RenderState state = RenderState.SETUP_RENDER;
+            while (state != null) {
+                boolean proceed;
+                switch (state) {
+                    case SETUP_RENDER:
+                        proceed = controller.setupRender(instance, writer);
+                        state = proceed ? RenderState.BEGIN_RENDER : RenderState.CLEANUP_RENDER;
+                        break;
+                    case BEGIN_RENDER:
+                        proceed = controller.beginRender(instance, writer);
+                        state = proceed ? RenderState.BEFORE_RENDER_TEMPLATE : RenderState.AFTER_RENDER;
+                        break;
+                    case BEFORE_RENDER_TEMPLATE:
+                        proceed = controller.beforeRenderTemplate(instance, writer);
+                        if (proceed) {
+                            templateCommand.render(writer);
+                            state = RenderState.BEFORE_RENDER_BODY;
+                        } else {
+                            state = RenderState.AFTER_RENDER_TEMPLATE;
+                        }
+                        break;
+                    case AFTER_RENDER_TEMPLATE:
+                        proceed = controller.afterRenderTemplate(instance, writer);
+                        state = proceed ? RenderState.AFTER_RENDER : RenderState.BEFORE_RENDER_TEMPLATE;
+                        break;
+                    case BEFORE_RENDER_BODY:
+                        proceed = controller.beforeRenderBody(instance, writer);
+                        if (proceed) {
+                            bodyCommand.render(writer);
+                        }
+                        state = RenderState.AFTER_RENDER_BODY;
+                        break;
+                    case AFTER_RENDER_BODY:
+                        proceed = controller.afterRenderBody(instance, writer);
+                        state = proceed ? RenderState.AFTER_RENDER_TEMPLATE : RenderState.BEFORE_RENDER_BODY;
+                        break;
+                    case AFTER_RENDER:
+                        proceed = controller.afterRender(instance, writer);
+                        state = proceed ? RenderState.CLEANUP_RENDER : RenderState.BEGIN_RENDER;
+                        break;
+                    case CLEANUP_RENDER:
+                        proceed = controller.cleanupRender(instance, writer);
+                        state = proceed ? null : RenderState.SETUP_RENDER;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown render state " + state);
+                }
+            }
+        } finally {
+            writer.endComponent();
+        }
     }
 
     private RenderCommand componentNodeRenderCommand(ComponentTemplateNode node, boolean templateRoot) throws Exception {
@@ -186,7 +184,7 @@ public class DefaultComponentParser implements ComponentParser {
         };
     }
 
-    protected Binding asBinding(String value, String defaultPrefix) {
+    protected Binding parseBinding(String value, String defaultPrefix) {
         int colonIndex = value.indexOf(':');
         String prefix;
         String sValue;
