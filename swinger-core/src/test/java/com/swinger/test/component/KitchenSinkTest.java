@@ -1,5 +1,6 @@
 package com.swinger.test.component;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.swinger.api.ComponentParser;
 import com.swinger.api.Registry;
 import com.swinger.impl.DefaultSwingWriter;
@@ -19,6 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class KitchenSinkTest {
+    static {
+        FlatDarkLaf.setup();
+    }
+
     private ComponentParser componentParser;
 
     @BeforeEach
