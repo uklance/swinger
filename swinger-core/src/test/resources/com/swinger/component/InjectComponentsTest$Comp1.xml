@@ -1,0 +1,4 @@
+<forEach items="people" item="person" xmlns:s="swinger">
+    <label s:id="personFirstName" s:key="person.id" text="prop:person.firstName" />
+    <label s:id="personLastName"  s:key="person.id" text="prop:person.lastName" />
+</forEach>

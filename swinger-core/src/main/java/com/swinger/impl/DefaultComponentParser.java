@@ -10,10 +10,12 @@ import com.swinger.sax.ComponentTemplateNode;
 import com.swinger.sax.ComponentTemplateParser;
 import com.swinger.sax.ParameterTemplateNode;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.xml.sax.Attributes;
 
 import java.util.*;
 
+@Slf4j
 @AllArgsConstructor
 public class DefaultComponentParser implements ComponentParser {
     private static final RenderCommand NOOP_RENDER_COMMAND = writer -> { };
@@ -201,6 +203,7 @@ public class DefaultComponentParser implements ComponentParser {
     protected ComponentTemplate resolveComponentTemplate(Class<?> type) throws Exception {
         String templatePath = type.getName().replace('.', '/') + ".xml";
         Resource templateResource = new ClassloaderResource(type, templatePath);
+        log.info("Attempting {} for {}", templatePath, type);
         return templateResource.exists()
                 ? templateParser.parse(templateResource)
                 : null;
