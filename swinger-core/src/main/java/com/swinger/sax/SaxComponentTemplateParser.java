@@ -20,13 +20,12 @@ public class SaxComponentTemplateParser implements ComponentTemplateParser  {
 
     @Override
     public ComponentTemplate parse(Resource resource) throws Exception {
-        return cache.computeIfAbsent(resource.getId(), k -> {
-            try {
-                return create(resource);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        String resourceId = resource.getId();
+        ComponentTemplate cached = cache.get(resourceId);
+        if (cached != null) {
+            return cached;
+        }
+        return cache.putIfAbsent(resourceId, create(resource));
     }
 
     private ComponentTemplate create(Resource resource) throws ParserConfigurationException, SAXException, IOException {
