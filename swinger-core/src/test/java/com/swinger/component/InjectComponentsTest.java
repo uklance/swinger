@@ -39,8 +39,12 @@ public class InjectComponentsTest {
         renderCommand.render(writer);
 
         Comp1 test = (Comp1) writer.getRootInstance().getComponent();
-        assertThat(test.getFirstNames().values()).extracting(l -> l.getLabel().getText()).containsExactly("Alice", "Bob", "Charlie");
-        assertThat(test.getLastNames().values()).extracting(l -> l.getLabel().getText()).containsExactly("Smith", "Johnson", "Brown");
+        assertThat(test.getFirstNames().values())
+                .extracting(l -> l.getLabel().getText())
+                .containsExactly("Alice", "Bob", "Charlie");
+        assertThat(test.getLastNames().values())
+                .extracting(l -> l.getLabel().getText())
+                .containsExactly("Smith", "Johnson", "Brown");
     }
 
     public static class Comp1 {

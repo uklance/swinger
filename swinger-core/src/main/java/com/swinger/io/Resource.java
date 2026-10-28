@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public interface Resource {
+    String getId();
     String getName();
     String getPath();
     InputStream getInputStream() throws IOException;

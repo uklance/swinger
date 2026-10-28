@@ -15,6 +15,11 @@ public class ClassloaderResource implements Resource {
     }
 
     @Override
+    public String getId() {
+        return "classpath:" + path;
+    }
+
+    @Override
     public String getName() {
         int slashIndex = path.lastIndexOf('/');
         return slashIndex < 0 ? path : path.substring(slashIndex + 1);

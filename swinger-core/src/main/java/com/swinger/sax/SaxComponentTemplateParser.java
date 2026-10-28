@@ -3,17 +3,33 @@ package com.swinger.sax;
 import com.swinger.io.Resource;
 import lombok.AllArgsConstructor;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @AllArgsConstructor
 public class SaxComponentTemplateParser implements ComponentTemplateParser  {
+    private final Map<String, ComponentTemplate> cache = new ConcurrentHashMap<>();
     private final SAXParserFactory saxParserFactory;
 
     @Override
     public ComponentTemplate parse(Resource resource) throws Exception {
+        return cache.computeIfAbsent(resource.getId(), k -> {
+            try {
+                return create(resource);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private ComponentTemplate create(Resource resource) throws ParserConfigurationException, SAXException, IOException {
         ComponentSaxHandler saxHandler = new ComponentSaxHandler();
         SAXParser saxParser = saxParserFactory.newSAXParser();
         try (InputStream in = resource.getInputStream()) {
