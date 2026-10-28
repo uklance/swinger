@@ -92,16 +92,33 @@ public class DefaultComponentParser implements ComponentParser {
                     propertyBindings.add(new DefaultPropertyBinding(propertyDefinition, binding));
                 }
             }
-            return writer -> render(writer, definition, propertyBindings, templateCommand, bodyCommand);
+            return writer -> render(
+                    writer,
+                    definition,
+                    propertyBindings,
+                    templateCommand,
+                    bodyCommand,
+                    templateNode != null
+            );
         } catch (Exception e) {
             throw new Exception("Error with " + type.getSimpleName(), e);
         }
     }
 
-    private void render(SwingWriter writer, ComponentDefinition definition, List<PropertyBinding> propertyBindings, RenderCommand templateCommand, RenderCommand bodyCommand) throws Exception {
+    private void render(
+            SwingWriter writer,
+            ComponentDefinition definition,
+            List<PropertyBinding> propertyBindings,
+            RenderCommand templateCommand,
+            RenderCommand bodyCommand,
+            boolean hasTemplate
+    ) throws Exception {
         DefaultComponentInstances renderedChildren = new DefaultComponentInstances();
         ComponentInstance instance = definition.createInstance(propertyBindings, writer.getRootInstance(), renderedChildren);
-        writer.startComponent(instance, renderedChildren::add);
+        writer.startComponent(instance);
+        if (hasTemplate) {
+            writer.startChildListener(renderedChildren::add);
+        }
         try {
             Controller controller = definition.getController();
             RenderState state = RenderState.SETUP_RENDER;
@@ -153,6 +170,9 @@ public class DefaultComponentParser implements ComponentParser {
                 }
             }
         } finally {
+            if (hasTemplate) {
+                writer.endChildListener();
+            }
             writer.endComponent();
         }
     }

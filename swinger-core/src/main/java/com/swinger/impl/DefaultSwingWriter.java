@@ -11,24 +11,38 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class DefaultSwingWriter implements SwingWriter {
+    private final Deque<ComponentInstance> componentStack = new LinkedList<>();
     private final Deque<Consumer<ComponentInstance>> childListenerStack = new LinkedList<>();
     private final Deque<Component> elementStack = new LinkedList<>();
     @Getter private final List<Component> rootElements = new LinkedList<>();
     private ComponentInstance rootInstance;
 
     @Override
-    public void startComponent(ComponentInstance component, Consumer<ComponentInstance> childListener) {
-        if (childListenerStack.isEmpty()) {
+    public void startComponent(ComponentInstance component) {
+        if (componentStack.isEmpty()) {
             rootInstance = component;
         } else {
-            childListenerStack.peek().accept(component);
+            Consumer<ComponentInstance> childListener = childListenerStack.peek();
+            if (childListener != null) {
+                childListener.accept(component);
+            }
         }
+        componentStack.push(component);
+    }
+
+    @Override
+    public void startChildListener(Consumer<ComponentInstance> childListener) {
         childListenerStack.push(childListener);
     }
 
     @Override
-    public void endComponent() {
+    public void endChildListener() {
         childListenerStack.pop();
+    }
+
+    @Override
+    public void endComponent() {
+        componentStack.pop();
     }
 
     @Override
@@ -48,11 +62,6 @@ public class DefaultSwingWriter implements SwingWriter {
     @Override
     public void endElement() {
         elementStack.pop();
-    }
-
-    @Override
-    public int elementDepth() {
-        return elementStack.size();
     }
 
     @Override

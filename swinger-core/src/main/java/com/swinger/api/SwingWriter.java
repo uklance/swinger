@@ -5,9 +5,10 @@ import java.util.function.Consumer;
 
 public interface SwingWriter {
     ComponentInstance getRootInstance();
-    void startComponent(ComponentInstance component, Consumer<ComponentInstance> childListener);
+    void startComponent(ComponentInstance component);
     void endComponent();
+    void startChildListener(Consumer<ComponentInstance> childListener);
+    void endChildListener();
     void startElement(Component component, Object constraints);
     void endElement();
-    int elementDepth();
 }

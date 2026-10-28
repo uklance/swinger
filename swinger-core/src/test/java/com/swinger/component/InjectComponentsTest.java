@@ -18,6 +18,7 @@ import java.awt.*;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class InjectComponentsTest {
     static {
@@ -47,6 +48,25 @@ public class InjectComponentsTest {
                 .containsExactly("Smith", "Johnson", "Brown");
     }
 
+    @Test
+    public void doesNotExposeIdsFromIncludedComponentTemplates() throws Exception {
+        RenderCommand renderCommand = componentParser.parse(Comp2.class);
+        DefaultSwingWriter writer = new DefaultSwingWriter();
+        renderCommand.render(writer);
+
+        Comp2 test = (Comp2) writer.getRootInstance().getComponent();
+        Comp3 nested = test.getNestedComponents().values().stream()
+                .map(Comp3.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertThat(nested.getPrivateLabels().values())
+                .extracting(l -> l.getLabel().getText())
+                .containsExactly("Private");
+        assertThatThrownBy(() -> test.getPrivateLabels().values())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("ComponentInstances not found for id: privateId");
+    }
+
     public static class Comp1 {
         @Getter
         @Setter
@@ -66,5 +86,21 @@ public class InjectComponentsTest {
                 new Person(2L, "Bob", "Johnson"),
                 new Person(3L, "Charlie", "Brown")
         );
+    }
+
+    public static class Comp2 {
+        @Getter
+        @InjectComponents("nestedComp")
+        private ComponentsRef<Object, Comp3> nestedComponents;
+
+        @Getter
+        @InjectComponents("privateId")
+        private ComponentsRef<Object, Component> privateLabels;
+    }
+
+    public static class Comp3 {
+        @Getter
+        @InjectComponents("privateId")
+        private ComponentsRef<Object, Label> privateLabels;
     }
 }

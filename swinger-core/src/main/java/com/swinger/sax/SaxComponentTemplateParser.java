@@ -25,7 +25,9 @@ public class SaxComponentTemplateParser implements ComponentTemplateParser  {
         if (cached != null) {
             return cached;
         }
-        return cache.putIfAbsent(resourceId, create(resource));
+        ComponentTemplate parsed = create(resource);
+        ComponentTemplate previous = cache.putIfAbsent(resourceId, parsed);
+        return previous == null ? parsed : previous;
     }
 
     private ComponentTemplate create(Resource resource) throws ParserConfigurationException, SAXException, IOException {

@@ -12,14 +12,26 @@ public class PackageComponentTypeResolver implements ComponentTypeResolver {
 
     @Override
     public Class<?> getComponentType(String name) throws Exception {
-        String upperName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        String[] candidates = getCandidates(name);
         for (String packageName : packages) {
-            try {
-                return classLoader.loadClass(packageName + "." + upperName);
-            } catch (ClassNotFoundException e) {
-                // Continue searching in the next package
+            for (String candidate : candidates) {
+                try {
+                    return classLoader.loadClass(packageName + "." + candidate);
+                } catch (ClassNotFoundException e) {
+                    // Ignore and try the next candidate
+                }
             }
         }
-        throw new ClassNotFoundException("Class not found: " + upperName + " in packages: " + packages);
+        throw new ClassNotFoundException("Class not found: " + name + " in packages: " + packages);
+    }
+
+    private String[] getCandidates(String name) {
+        String upperName = Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        int dotIndex = upperName.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return new String[] { upperName };
+        } else {
+            return new String[] { upperName, upperName.substring(0, dotIndex) + '$' + Character.toUpperCase(upperName.charAt(dotIndex + 1)) + upperName.substring(dotIndex + 2) };
+        }
     }
 }

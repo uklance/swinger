@@ -1,0 +1,3 @@
+<panel xmlns:s="swinger">
+    <injectComponentsTest.comp3 s:id="nestedComp" />
+</panel>
